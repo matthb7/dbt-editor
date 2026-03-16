@@ -24,7 +24,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -35,7 +36,7 @@ input {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(300px, 460px) minmax(0, 1fr);
+  grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
   gap: 24px;
   padding: 28px;
 }
@@ -66,7 +67,8 @@ input {
 }
 
 .hero-panel h1,
-.workspace-header h2 {
+.workspace-header h2,
+.editor-header h3 {
   margin: 0;
   font-family: "IBM Plex Serif", Georgia, serif;
   font-weight: 600;
@@ -76,11 +78,11 @@ input {
 .hero-panel h1 {
   font-size: clamp(2.4rem, 4vw, 3.4rem);
   line-height: 1.02;
-  max-width: 10ch;
+  max-width: 12ch;
 }
 
 .hero-copy {
-  max-width: 44ch;
+  max-width: 46ch;
   color: #b7c0cf;
 }
 
@@ -130,12 +132,16 @@ input {
   min-height: 0;
 }
 
-.workspace-header {
+.workspace-header,
+.panel-header {
   padding: 24px 24px 16px;
   display: flex;
   align-items: end;
   justify-content: space-between;
   gap: 12px;
+}
+
+.workspace-header {
   border-bottom: 1px solid rgba(233, 237, 245, 0.08);
 }
 
@@ -143,22 +149,66 @@ input {
   font-size: clamp(1.4rem, 2vw, 2rem);
 }
 
-.project-stats {
+.project-stats,
+.editor-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.project-stats span,
+.badge {
   padding: 8px 12px;
   border-radius: 999px;
   background: rgba(233, 237, 245, 0.08);
   color: #b7c0cf;
 }
 
-.tree-panel,
-.empty-panel {
+.badge.dirty {
+  background: rgba(244, 162, 97, 0.18);
+  color: #ffd3b3;
+}
+
+.workspace-content {
   flex: 1;
   min-height: 0;
-  padding: 18px 12px 18px 18px;
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+}
+
+.explorer-panel,
+.editor-panel {
+  min-height: 0;
+}
+
+.explorer-panel {
+  border-right: 1px solid rgba(233, 237, 245, 0.08);
+}
+
+.panel-header {
+  align-items: center;
+  padding-bottom: 12px;
+}
+
+.panel-header span {
+  color: #7d8797;
+  font-size: 0.9rem;
+}
+
+.editor-header {
+  align-items: start;
+  border-bottom: 1px solid rgba(233, 237, 245, 0.08);
+}
+
+.editor-header h3 {
+  font-size: 1.2rem;
+  word-break: break-word;
 }
 
 .tree-panel {
+  height: calc(100% - 65px);
   overflow: auto;
+  padding: 0 12px 18px 18px;
 }
 
 .tree-list {
@@ -187,12 +237,13 @@ input {
   cursor: pointer;
 }
 
-.tree-row:hover {
+.tree-row:hover,
+.tree-row.selected {
   background: rgba(233, 237, 245, 0.06);
 }
 
-.tree-row.file {
-  cursor: default;
+.tree-row.selected {
+  outline: 1px solid rgba(244, 162, 97, 0.24);
 }
 
 .tree-icon {
@@ -210,21 +261,69 @@ input {
   font-size: 0.85rem;
 }
 
+.editor-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.editor-textarea,
+.editor-preview,
+.editor-empty,
+.empty-panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.editor-textarea {
+  width: 100%;
+  border: 0;
+  resize: none;
+  padding: 20px 24px 24px;
+  color: #edf2ff;
+  background: transparent;
+  font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.editor-textarea:focus {
+  outline: none;
+}
+
+.editor-preview {
+  overflow: auto;
+  padding: 24px;
+  display: grid;
+  place-items: start center;
+}
+
+.image-preview {
+  max-width: 100%;
+  height: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(233, 237, 245, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.editor-empty,
 .empty-panel {
   display: grid;
   place-content: center;
   gap: 6px;
+  padding: 24px;
   text-align: center;
   color: #b7c0cf;
 }
 
+.editor-empty p,
 .empty-panel p {
   margin: 0;
   font-size: 1.1rem;
   color: #e9edf5;
 }
 
-@media (max-width: 880px) {
+@media (max-width: 1100px) {
   .app-shell {
     grid-template-columns: 1fr;
     padding: 16px;
@@ -236,5 +335,23 @@ input {
 
   .hero-panel h1 {
     max-width: none;
+  }
+
+  .workspace-content {
+    grid-template-columns: 1fr;
+  }
+
+  .explorer-panel {
+    border-right: 0;
+    border-bottom: 1px solid rgba(233, 237, 245, 0.08);
+    max-height: 320px;
+  }
+
+  .tree-panel {
+    height: auto;
+  }
+
+  .editor-panel {
+    min-height: 420px;
   }
 }
