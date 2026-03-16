@@ -69,7 +69,7 @@ export default function TerminalPanel({ collapsed = false, onToggle }) {
                 onClick={() => dispatch(clearTerminalEntries())}
                 disabled={entries.length === 0}
               >
-                Clear log
+                Clear terminal
               </button>
             </>
           ) : null}

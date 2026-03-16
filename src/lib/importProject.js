@@ -111,15 +111,18 @@ function normalizeImportedProject({
 }
 
 function findDbtProjectRoot(files) {
-  const match = files.find((entry) => {
-    const segments = entry.path.split('/');
-    return segments[segments.length - 1] === 'dbt_project.yml';
-  });
+  const matches = files
+    .filter((entry) => {
+      const segments = entry.path.split('/');
+      return segments[segments.length - 1] === 'dbt_project.yml';
+    })
+    .sort((left, right) => compareProjectFileCandidates(left.path, right.path));
 
-  if (!match) {
+  if (matches.length === 0) {
     return null;
   }
 
+  const match = matches[0];
   const segments = match.path.split('/');
   segments.pop();
   return segments.join('/');
@@ -136,4 +139,35 @@ function findDbtProfileName(files, detectedProjectRoot) {
 
   const match = projectFile.content.match(/^\s*profile:\s*["']?([^"'\n]+)["']?/m);
   return match ? match[1].trim() : '';
+}
+
+function compareProjectFileCandidates(leftPath, rightPath) {
+  const leftSegments = leftPath.split('/');
+  const rightSegments = rightPath.split('/');
+  const leftRootPenalty = getProjectRootPenalty(leftSegments);
+  const rightRootPenalty = getProjectRootPenalty(rightSegments);
+
+  if (leftRootPenalty !== rightRootPenalty) {
+    return leftRootPenalty - rightRootPenalty;
+  }
+
+  if (leftSegments.length !== rightSegments.length) {
+    return leftSegments.length - rightSegments.length;
+  }
+
+  return leftPath.localeCompare(rightPath);
+}
+
+function getProjectRootPenalty(segments) {
+  const folderSegments = segments.slice(0, -1);
+
+  if (folderSegments.length === 0) {
+    return 0;
+  }
+
+  if (folderSegments[0] === 'dbt_packages') {
+    return 2;
+  }
+
+  return 1;
 }

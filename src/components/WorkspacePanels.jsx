@@ -42,7 +42,7 @@ export default function WorkspacePanels({
   const verticalRef = useRef(null);
   const horizontalRef = useRef(null);
   const [explorerWidth, setExplorerWidth] = useState(310);
-  const [terminalHeight, setTerminalHeight] = useState(280);
+  const [terminalHeight, setTerminalHeight] = useState(420);
   const [collapsed, setCollapsed] = useState({
     explorer: false,
     editor: false,
@@ -117,7 +117,7 @@ export default function WorkspacePanels({
             : '60px minmax(0, 1fr)'
           : collapsed.terminal
             ? 'minmax(0, 1fr) 60px'
-            : `minmax(160px, calc(100% - ${terminalHeight + 10}px)) 10px ${terminalHeight}px`,
+            : `minmax(120px, 220px) 10px minmax(${terminalHeight}px, 1fr)`,
       }
     : {
         gridTemplateRows: collapsed.editor ? '60px' : '1fr',

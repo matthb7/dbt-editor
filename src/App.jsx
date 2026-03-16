@@ -3,11 +3,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import AdapterSetupPanel from './components/AdapterSetupPanel';
 import AdapterStatusBar from './components/AdapterStatusBar';
 import WorkspacePanels from './components/WorkspacePanels';
-import { clearActiveWorkspaceHandle } from './lib/workspaceHandles';
+import {
+  clearPersistedWorkspaceHandle,
+} from './lib/workspaceHandles';
 import {
   importProjectPreview,
   loadWorkspaceFolder,
   resetProject,
+  restoreSavedWorkspace,
 } from './store/projectSlice';
 import {
   loadSetupStatus,
@@ -41,6 +44,10 @@ export default function App() {
 
   useEffect(() => {
     dispatch(loadSetupStatus());
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(restoreSavedWorkspace());
   }, [dispatch]);
 
   useEffect(() => {
@@ -121,7 +128,7 @@ export default function App() {
             type="button"
             className="ghost-button reset-button"
             onClick={() => {
-              clearActiveWorkspaceHandle();
+              clearPersistedWorkspaceHandle();
               dispatch(resetProject());
             }}
           >

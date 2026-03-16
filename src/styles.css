@@ -1,10 +1,11 @@
 :root {
   font-family: "IBM Plex Sans", "Helvetica Neue", sans-serif;
-  color: #e9edf5;
+  color: #1f3048;
   background:
-    radial-gradient(circle at top left, rgba(229, 122, 42, 0.18), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(70, 111, 255, 0.16), transparent 34%),
-    #10141b;
+    radial-gradient(circle at top left, rgba(244, 162, 97, 0.26), transparent 28%),
+    radial-gradient(circle at top right, rgba(79, 132, 255, 0.16), transparent 32%),
+    radial-gradient(circle at bottom left, rgba(97, 207, 194, 0.15), transparent 30%),
+    #f5f7fb;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
@@ -21,6 +22,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  color: #1f3048;
+  background: transparent;
 }
 
 button,
@@ -48,11 +51,11 @@ textarea {
 
 .hero-panel,
 .workspace-panel {
-  border: 1px solid rgba(233, 237, 245, 0.08);
+  border: 1px solid rgba(74, 104, 145, 0.12);
   border-radius: 24px;
-  background: rgba(8, 11, 17, 0.72);
+  background: rgba(252, 252, 253, 0.84);
   backdrop-filter: blur(18px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 18px 50px rgba(35, 56, 90, 0.12);
 }
 
 .hero-panel {
@@ -88,7 +91,7 @@ textarea {
 
 .hero-copy {
   max-width: 46ch;
-  color: #b7c0cf;
+  color: #596a82;
 }
 
 .import-panel {
@@ -116,8 +119,9 @@ textarea {
   width: fit-content;
   padding: 12px 18px;
   border-radius: 999px;
-  border: 1px solid rgba(233, 237, 245, 0.14);
-  color: #dbe4f0;
+  border: 1px solid rgba(74, 104, 145, 0.16);
+  background: rgba(255, 255, 255, 0.8);
+  color: #28405c;
   cursor: pointer;
 }
 
@@ -126,13 +130,13 @@ textarea {
   gap: 8px;
   padding: 16px 18px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(233, 237, 245, 0.08);
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(74, 104, 145, 0.12);
 }
 
 .loaded-source-card p {
   margin: 0;
-  color: #b7c0cf;
+  color: #596a82;
 }
 
 .workspace-bubble {
@@ -147,10 +151,10 @@ textarea {
   max-width: min(520px, calc(100vw - 56px));
   padding: 14px 16px;
   border-radius: 20px;
-  border: 1px solid rgba(233, 237, 245, 0.12);
-  background: rgba(8, 11, 17, 0.88);
+  border: 1px solid rgba(74, 104, 145, 0.14);
+  background: rgba(255, 249, 245, 0.94);
   backdrop-filter: blur(22px);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 16px 34px rgba(41, 62, 94, 0.16);
 }
 
 .workspace-bubble-copy {
@@ -167,16 +171,16 @@ textarea {
 }
 
 .workspace-bubble-copy strong {
-  color: #edf2ff;
+  color: #1f3048;
 }
 
 .workspace-bubble-copy span {
-  color: #b7c0cf;
+  color: #596a82;
   font-size: 0.92rem;
 }
 
 .source-root-label {
-  color: #edf2ff;
+  color: #2d4664;
   font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
   font-size: 0.9rem;
 }
@@ -198,7 +202,7 @@ textarea {
 
 .status-message {
   margin: 0;
-  color: #b7c0cf;
+  color: #596a82;
 }
 
 .status-message.error {
@@ -225,7 +229,7 @@ textarea {
 }
 
 .workspace-header {
-  border-bottom: 1px solid rgba(233, 237, 245, 0.08);
+  border-bottom: 1px solid rgba(74, 104, 145, 0.1);
 }
 
 .workspace-header h2 {
@@ -238,8 +242,8 @@ textarea {
   justify-content: space-between;
   gap: 16px;
   padding: 14px 24px;
-  border-bottom: 1px solid rgba(233, 237, 245, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(74, 104, 145, 0.1);
+  background: linear-gradient(90deg, rgba(255, 244, 235, 0.92), rgba(239, 247, 255, 0.82));
 }
 
 .adapter-status-copy {
@@ -248,11 +252,11 @@ textarea {
 }
 
 .adapter-status-copy strong {
-  color: #edf2ff;
+  color: #1f3048;
 }
 
 .adapter-status-copy span {
-  color: #96a2b4;
+  color: #596a82;
   font-size: 0.92rem;
 }
 
@@ -266,17 +270,19 @@ textarea {
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 0.8rem;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .status-pill.ok {
-  color: #9ef2bf;
-  background: rgba(73, 191, 125, 0.16);
+  color: #1b5b3a;
+  background: rgba(73, 191, 125, 0.22);
+  border: 1px solid rgba(60, 155, 103, 0.2);
 }
 
 .status-pill.warn {
-  color: #ffd1a6;
-  background: rgba(231, 111, 81, 0.16);
+  color: #8a4b18;
+  background: rgba(244, 162, 97, 0.24);
+  border: 1px solid rgba(213, 125, 53, 0.2);
 }
 
 .project-stats,
@@ -290,8 +296,8 @@ textarea {
 .badge {
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(233, 237, 245, 0.08);
-  color: #b7c0cf;
+  background: rgba(255, 255, 255, 0.82);
+  color: #54667e;
 }
 
 .badge.dirty {
@@ -342,7 +348,7 @@ textarea {
 }
 
 .panel-header span {
-  color: #7d8797;
+  color: #6a7c92;
   font-size: 0.9rem;
 }
 
@@ -365,7 +371,7 @@ textarea {
 }
 
 .panel-meta-label {
-  color: #7d8797;
+  color: #6a7c92;
   font-size: 0.9rem;
 }
 
@@ -373,9 +379,9 @@ textarea {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  border: 1px solid rgba(233, 237, 245, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-  color: #edf2ff;
+  border: 1px solid rgba(74, 104, 145, 0.16);
+  background: rgba(255, 255, 255, 0.86);
+  color: #28405c;
   cursor: pointer;
 }
 
@@ -413,7 +419,7 @@ textarea {
 
 .tree-row:hover,
 .tree-row.selected {
-  background: rgba(233, 237, 245, 0.06);
+  background: rgba(74, 104, 145, 0.08);
 }
 
 .tree-row.selected {
@@ -426,7 +432,7 @@ textarea {
 }
 
 .tree-icon {
-  color: #93a0b6;
+  color: #6f8197;
   font-size: 0.85rem;
 }
 
@@ -439,8 +445,8 @@ textarea {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  background: rgba(255, 255, 255, 0.05);
-  color: #edf2ff;
+  background: rgba(255, 255, 255, 0.9);
+  color: #29415d;
 }
 
 .tree-label {
@@ -470,23 +476,23 @@ textarea {
 }
 
 .tree-meta {
-  color: #7d8797;
+  color: #6a7c92;
   font-size: 0.85rem;
 }
 
 .pane-card {
-  border: 1px solid rgba(233, 237, 245, 0.08);
+  border: 1px solid rgba(74, 104, 145, 0.1);
   border-radius: 22px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)),
-    rgba(8, 11, 17, 0.74);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(246, 249, 253, 0.92)),
+    rgba(255, 255, 255, 0.9);
   overflow: hidden;
 }
 
 .editor-stack {
   min-height: 0;
   display: grid;
-  grid-template-rows: minmax(220px, 1fr) 10px 280px;
+  grid-template-rows: minmax(120px, 220px) 10px minmax(420px, 1fr);
 }
 
 .editor-panel {
@@ -616,14 +622,14 @@ textarea {
   gap: 6px;
   padding: 24px;
   text-align: center;
-  color: #b7c0cf;
+  color: #596a82;
 }
 
 .editor-empty p,
 .empty-panel p {
   margin: 0;
   font-size: 1.1rem;
-  color: #e9edf5;
+  color: #1f3048;
 }
 
 .terminal-panel {
@@ -631,17 +637,17 @@ textarea {
   height: 100%;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
-  background: rgba(4, 6, 11, 0.45);
+  background: rgba(242, 247, 252, 0.9);
 }
 
 .terminal-header {
-  border-bottom: 1px solid rgba(233, 237, 245, 0.08);
+  border-bottom: 1px solid rgba(74, 104, 145, 0.1);
 }
 
 .ghost-button {
-  border: 1px solid rgba(233, 237, 245, 0.12);
-  background: transparent;
-  color: #b7c0cf;
+  border: 1px solid rgba(74, 104, 145, 0.16);
+  background: rgba(255, 255, 255, 0.82);
+  color: #445b75;
   border-radius: 999px;
   padding: 8px 12px;
   cursor: pointer;
@@ -657,7 +663,7 @@ textarea {
   padding: 18px 24px;
   display: grid;
   gap: 14px;
-  border-bottom: 1px solid rgba(233, 237, 245, 0.08);
+  border-bottom: 1px solid rgba(74, 104, 145, 0.1);
 }
 
 .field-group {
@@ -666,12 +672,12 @@ textarea {
 }
 
 .field-group span {
-  color: #b7c0cf;
+  color: #596a82;
   font-size: 0.9rem;
 }
 
 .field-hint {
-  color: #8e98a8;
+  color: #6e7f93;
   font-size: 0.83rem;
   line-height: 1.45;
 }
@@ -685,9 +691,9 @@ textarea {
 .terminal-input {
   width: 100%;
   border-radius: 14px;
-  border: 1px solid rgba(233, 237, 245, 0.12);
-  background: rgba(255, 255, 255, 0.03);
-  color: #edf2ff;
+  border: 1px solid rgba(74, 104, 145, 0.16);
+  background: rgba(255, 255, 255, 0.88);
+  color: #22344d;
   padding: 12px 14px;
   font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
 }
@@ -707,7 +713,7 @@ textarea {
 
 .terminal-note {
   margin: 0;
-  color: #7d8797;
+  color: #64768d;
   font-size: 0.9rem;
 }
 
@@ -716,7 +722,7 @@ textarea {
   gap: 3px;
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1px solid rgba(233, 237, 245, 0.08);
+  border: 1px solid rgba(74, 104, 145, 0.12);
 }
 
 .terminal-setup-banner.ready {
@@ -728,11 +734,11 @@ textarea {
 }
 
 .terminal-setup-banner strong {
-  color: #edf2ff;
+  color: #1f3048;
 }
 
 .terminal-setup-banner span {
-  color: #a7b1c0;
+  color: #607289;
   font-size: 0.9rem;
 }
 
@@ -775,13 +781,13 @@ textarea {
 
 .terminal-detected-root {
   border-radius: 14px;
-  border: 1px solid rgba(233, 237, 245, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(74, 104, 145, 0.12);
+  background: rgba(255, 255, 255, 0.76);
   padding: 12px 14px;
 }
 
 .terminal-detected-root code {
-  color: #edf2ff;
+  color: #2b4461;
   font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
   word-break: break-word;
 }
@@ -796,8 +802,8 @@ textarea {
 }
 
 .terminal-entry {
-  border: 1px solid rgba(233, 237, 245, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(74, 104, 145, 0.12);
+  background: rgba(255, 255, 255, 0.8);
   border-radius: 18px;
   padding: 16px;
   display: grid;
@@ -820,14 +826,14 @@ textarea {
 }
 
 .terminal-entry-header code {
-  color: #edf2ff;
+  color: #22344d;
   font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
   word-break: break-word;
 }
 
 .terminal-entry-header span,
 .terminal-cwd {
-  color: #7d8797;
+  color: #677991;
   font-size: 0.85rem;
 }
 
@@ -840,7 +846,7 @@ textarea {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  color: #d5deea;
+  color: #324860;
   font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
   font-size: 0.9rem;
   line-height: 1.55;
@@ -863,7 +869,7 @@ textarea {
 .collapsed-rail {
   display: grid;
   place-items: center;
-  color: #8c96a8;
+  color: #6d7d93;
   font-size: 0.82rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -891,7 +897,7 @@ textarea {
   inset: 0;
   margin: auto;
   border-radius: 999px;
-  background: rgba(233, 237, 245, 0.14);
+  background: rgba(74, 104, 145, 0.18);
 }
 
 .pane-resizer.vertical {
@@ -953,7 +959,7 @@ textarea {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(4, 6, 11, 0.54);
+  background: rgba(31, 48, 72, 0.24);
   display: grid;
   place-items: center;
   padding: 24px;
@@ -964,10 +970,10 @@ textarea {
   max-height: min(88vh, 920px);
   overflow: auto;
   border-radius: 24px;
-  border: 1px solid rgba(233, 237, 245, 0.1);
-  background: rgba(9, 13, 19, 0.96);
+  border: 1px solid rgba(74, 104, 145, 0.14);
+  background: rgba(250, 252, 255, 0.96);
   backdrop-filter: blur(24px);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 30px 80px rgba(32, 50, 76, 0.18);
   padding: 24px;
   display: grid;
   gap: 18px;
@@ -1004,7 +1010,7 @@ textarea {
 
 .setup-help {
   margin: 0;
-  color: #9ca7b7;
+  color: #607289;
   font-size: 0.93rem;
 }
 
@@ -1013,32 +1019,36 @@ textarea {
   gap: 4px;
   padding: 14px 16px;
   border-radius: 16px;
-  border: 1px solid rgba(233, 237, 245, 0.08);
+  border: 1px solid rgba(74, 104, 145, 0.14);
 }
 
 .setup-feedback strong {
-  color: #edf2ff;
+  color: #1f3048;
 }
 
 .setup-feedback span {
-  color: #a9b3c3;
+  color: #5f7188;
   font-size: 0.92rem;
 }
 
 .setup-feedback.success {
-  background: rgba(73, 191, 125, 0.1);
+  background: rgba(73, 191, 125, 0.14);
+  border-color: rgba(60, 155, 103, 0.24);
 }
 
 .setup-feedback.warning {
-  background: rgba(244, 162, 97, 0.12);
+  background: rgba(244, 162, 97, 0.16);
+  border-color: rgba(213, 125, 53, 0.24);
 }
 
 .setup-feedback.error {
-  background: rgba(231, 111, 81, 0.12);
+  background: rgba(231, 111, 81, 0.15);
+  border-color: rgba(197, 85, 58, 0.24);
 }
 
 .setup-feedback.running {
-  background: rgba(115, 201, 255, 0.1);
+  background: rgba(115, 201, 255, 0.14);
+  border-color: rgba(69, 149, 199, 0.22);
 }
 
 .setup-output {
