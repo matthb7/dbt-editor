@@ -3,7 +3,6 @@ import {
   clearTerminalEntries,
   runTerminalCommand,
   setDraftCommand,
-  setProjectPath,
 } from '../store/terminalSlice';
 
 function TerminalEntry({ entry }) {
@@ -30,8 +29,11 @@ function TerminalEntry({ entry }) {
 
 export default function TerminalPanel() {
   const dispatch = useDispatch();
-  const { projectPath, draftCommand, isRunning, entries, examples } =
+  const { draftCommand, isRunning, entries } =
     useSelector((state) => state.terminal);
+  const { detectedProjectRoot, projectSource } = useSelector(
+    (state) => state.project,
+  );
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -59,50 +61,51 @@ export default function TerminalPanel() {
       </div>
 
       <form className="terminal-form" onSubmit={handleSubmit}>
-        <label className="field-group">
-          <span>dbt project path</span>
-          <input
-            className="terminal-input"
-            type="text"
-            placeholder="/absolute/path/to/dbt-project"
-            value={projectPath}
-            onChange={(event) => dispatch(setProjectPath(event.target.value))}
-          />
-        </label>
+        <div className="field-group">
+          <span>Detected dbt root</span>
+          <div className="terminal-detected-root">
+            <code>
+              {detectedProjectRoot === null ? '(none detected)' : detectedProjectRoot || '.'}
+            </code>
+          </div>
+        </div>
 
         <label className="field-group">
-          <span>Command</span>
-          <div className="command-row">
-            <input
-              className="terminal-input command-input"
-              type="text"
-              value={draftCommand}
-              onChange={(event) => dispatch(setDraftCommand(event.target.value))}
-            />
-            <button className="import-button run-button" type="submit" disabled={isRunning}>
-              {isRunning ? 'Running...' : 'Run'}
-            </button>
+          <span>Prompt</span>
+          <div className="terminal-shell">
+            <div className="terminal-prompt-row">
+              <span className="terminal-prompt" aria-hidden="true">
+                $
+              </span>
+              <input
+                className="terminal-command-input"
+                type="text"
+                value={draftCommand}
+                onChange={(event) => dispatch(setDraftCommand(event.target.value))}
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck="false"
+              />
+              <button
+                className="import-button run-button"
+                type="submit"
+                disabled={isRunning}
+              >
+                {isRunning ? 'Running...' : 'Run'}
+              </button>
+            </div>
           </div>
         </label>
 
-        <div className="command-examples">
-          {examples.map((example) => (
-            <button
-              key={example}
-              type="button"
-              className="example-chip"
-              onClick={() => dispatch(setDraftCommand(example))}
-            >
-              {example}
-            </button>
-          ))}
-        </div>
-
         <p className="terminal-note">
-          Only `dbt run`, `seed`, `test`, `snapshot`, `build`, and `compile`
-          are enabled here. This terminal expects a local dbt CLI install on the
-          same machine.
+          Real command runner, limited command surface. `dbt --version`, `run`,
+          `seed`, `test`, `snapshot`, `build`, and `compile` are enabled.
         </p>
+        {projectSource === 'workspace' && detectedProjectRoot === null ? (
+          <p className="terminal-note error-text">
+            No `dbt_project.yml` was detected in this workspace yet.
+          </p>
+        ) : null}
       </form>
 
       <div className="terminal-log">
@@ -110,8 +113,8 @@ export default function TerminalPanel() {
           entries.map((entry) => <TerminalEntry key={entry.id} entry={entry} />)
         ) : (
           <div className="editor-empty terminal-empty">
-            <p>No commands run yet.</p>
-            <span>Use the prompt above to execute a dbt command against a local project path.</span>
+            <p>No terminal output yet.</p>
+            <span>Type a dbt command and run it against the detected project root.</span>
           </div>
         )}
       </div>

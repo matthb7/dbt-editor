@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import EditorPanel from './components/EditorPanel';
+import TerminalPanel from './components/TerminalPanel';
 import TreeNode from './components/TreeNode';
 import { formatSize, getLanguageLabel } from './lib/files';
 import { clearActiveWorkspaceHandle } from './lib/workspaceHandles';
@@ -14,6 +15,7 @@ import {
 } from './store/projectSlice';
 import {
   selectDirtyCount,
+  selectDetectedProjectRoot,
   selectProjectState,
   selectSelectedFile,
 } from './store/selectors';
@@ -33,6 +35,7 @@ export default function App() {
   } = useSelector(selectProjectState);
   const selectedFile = useSelector(selectSelectedFile);
   const dirtyCount = useSelector(selectDirtyCount);
+  const detectedProjectRoot = useSelector(selectDetectedProjectRoot);
 
   const handleChooseWorkspace = async () => {
     await dispatch(loadWorkspaceFolder());
@@ -70,6 +73,11 @@ export default function App() {
             <div className="loaded-source-card">
               <span className="badge">{sourceLabel || 'Loaded project'}</span>
               <p>{projectSource === 'workspace' ? 'Local folder connected.' : 'Browser-only ZIP preview loaded.'}</p>
+              {detectedProjectRoot !== null ? (
+                <code className="source-root-label">
+                  dbt root: {detectedProjectRoot || '.'}
+                </code>
+              ) : null}
             </div>
             <button
               type="button"
@@ -166,6 +174,8 @@ export default function App() {
                 file={selectedFile}
                 onContentChange={handleContentChange}
               />
+
+              {projectSource === 'workspace' ? <TerminalPanel /> : null}
             </section>
           </div>
         ) : (

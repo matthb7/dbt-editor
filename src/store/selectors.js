@@ -9,3 +9,6 @@ export const selectSelectedFile = (state) => {
 
 export const selectDirtyCount = (state) =>
   countDirtyFiles(state.project.filesByPath);
+
+export const selectDetectedProjectRoot = (state) =>
+  state.project.detectedProjectRoot;

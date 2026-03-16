@@ -65,6 +65,8 @@ function normalizeImportedProject({
   emptyMessage,
   readyMessage,
 }) {
+  const detectedProjectRoot = findDbtProjectRoot(files);
+
   if (files.length === 0) {
     revokeBlobUrls(previousFilesByPath);
     return {
@@ -76,6 +78,7 @@ function normalizeImportedProject({
       projectName: '',
       projectSource: null,
       sourceLabel: '',
+      detectedProjectRoot: null,
       statusMessage: emptyMessage,
       statusState: 'error',
     };
@@ -98,7 +101,23 @@ function normalizeImportedProject({
     projectName,
     projectSource: sourceType,
     sourceLabel,
+    detectedProjectRoot,
     statusMessage: readyMessage,
     statusState: 'ready',
   };
+}
+
+function findDbtProjectRoot(files) {
+  const match = files.find((entry) => {
+    const segments = entry.path.split('/');
+    return segments[segments.length - 1] === 'dbt_project.yml';
+  });
+
+  if (!match) {
+    return null;
+  }
+
+  const segments = match.path.split('/');
+  segments.pop();
+  return segments.join('/');
 }

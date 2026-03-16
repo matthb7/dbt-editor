@@ -10,6 +10,7 @@ const initialState = {
   projectName: '',
   projectSource: null,
   sourceLabel: '',
+  detectedProjectRoot: null,
   filesByPath: {},
   fileCount: 0,
   selectedPath: '',
@@ -78,6 +79,7 @@ const projectSlice = createSlice({
       state.projectName = '';
       state.projectSource = null;
       state.sourceLabel = '';
+      state.detectedProjectRoot = null;
       state.filesByPath = {};
       state.fileCount = 0;
       state.selectedPath = '';
@@ -116,6 +118,7 @@ function applyProjectPayload(state, action) {
     projectName,
     projectSource,
     sourceLabel,
+    detectedProjectRoot,
     filesByPath,
     fileCount,
     firstFilePath,
@@ -128,6 +131,7 @@ function applyProjectPayload(state, action) {
   state.projectName = projectName;
   state.projectSource = projectSource;
   state.sourceLabel = sourceLabel;
+  state.detectedProjectRoot = detectedProjectRoot;
   state.filesByPath = filesByPath;
   state.fileCount = fileCount;
   state.selectedPath = firstFilePath;
@@ -143,6 +147,7 @@ function applyProjectError(state, action) {
   state.projectName = '';
   state.projectSource = null;
   state.sourceLabel = '';
+  state.detectedProjectRoot = null;
   state.filesByPath = {};
   state.fileCount = 0;
   state.selectedPath = '';

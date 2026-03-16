@@ -1,21 +1,10 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { executeTerminalCommand } from '../lib/terminalApi';
 
-const EXAMPLE_COMMANDS = [
-  'dbt --version',
-  'dbt run --select "customers"',
-  'dbt seed',
-  'dbt test --exclude "myTest"',
-  'dbt snapshot',
-  'dbt build',
-  'dbt compile',
-];
-
 const initialState = {
   projectPath: '',
-  draftCommand: EXAMPLE_COMMANDS[0],
+  draftCommand: 'dbt --version',
   isRunning: false,
-  examples: EXAMPLE_COMMANDS,
   entries: [],
 };
 
@@ -23,11 +12,31 @@ export const runTerminalCommand = createAsyncThunk(
   'terminal/runTerminalCommand',
   async (_, { getState, rejectWithValue }) => {
     const state = getState().terminal;
+    const projectState = getState().project;
+    const commandText = state.draftCommand.trim();
+    const isVersionCommand =
+      commandText === 'dbt --version' || commandText === 'dbt -V';
+
+    if (
+      !isVersionCommand &&
+      (projectState.detectedProjectRoot === null ||
+        projectState.projectSource !== 'workspace')
+    ) {
+      return rejectWithValue({
+        ok: false,
+        exitCode: 1,
+        stdout: '',
+        stderr:
+          'Command execution is only enabled for a real workspace folder with a detected dbt_project.yml root.',
+        cwd: projectState.detectedProjectRoot ?? '',
+        commandText,
+      });
+    }
 
     try {
       return await executeTerminalCommand({
-        commandText: state.draftCommand,
-        projectPath: state.projectPath,
+        commandText,
+        projectPath: '',
       });
     } catch (error) {
       if (error?.payload) {
@@ -40,8 +49,8 @@ export const runTerminalCommand = createAsyncThunk(
         stdout: '',
         stderr:
           error instanceof Error ? error.message : 'Command execution failed.',
-        cwd: state.projectPath?.trim() || '',
-        commandText: state.draftCommand,
+        cwd: projectState.detectedProjectRoot ?? '',
+        commandText,
       });
     }
   },
@@ -51,9 +60,6 @@ const terminalSlice = createSlice({
   name: 'terminal',
   initialState,
   reducers: {
-    setProjectPath(state, action) {
-      state.projectPath = action.payload;
-    },
     setDraftCommand(state, action) {
       state.draftCommand = action.payload;
     },
@@ -68,7 +74,7 @@ const terminalSlice = createSlice({
         state.entries.unshift({
           id: action.meta.requestId,
           commandText: state.draftCommand,
-          cwd: state.projectPath?.trim() || '',
+          cwd: '',
           status: 'running',
           exitCode: null,
           stdout: '',
@@ -100,7 +106,7 @@ const terminalSlice = createSlice({
           exitCode: 1,
           stderr: 'Command execution failed.',
           stdout: '',
-          cwd: state.projectPath?.trim() || '',
+          cwd: '',
         };
 
         if (!entry) {
@@ -116,7 +122,6 @@ const terminalSlice = createSlice({
   },
 });
 
-export const { clearTerminalEntries, setDraftCommand, setProjectPath } =
-  terminalSlice.actions;
+export const { clearTerminalEntries, setDraftCommand } = terminalSlice.actions;
 
 export default terminalSlice.reducer;
