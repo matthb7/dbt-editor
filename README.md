@@ -18,7 +18,15 @@ This app assumes a real local dbt environment on the same machine as the web app
 ### Core app requirements
 
 - Node.js and npm
-- Homebrew on macOS
+- a package manager or installer path for your OS
+
+### macOS setup
+
+This is the path currently tested most heavily.
+
+- Homebrew
+- Python 3.12
+- `pipx`
 
 ### dbt requirements
 
@@ -72,6 +80,53 @@ The ODBC driver list should include:
 [ODBC Driver 18 for SQL Server]
 ```
 
+### Windows setup
+
+Windows does not use the Homebrew steps above.
+
+Recommended prerequisites:
+
+- Node.js and npm
+- Python 3.12
+- `pipx`
+- Azure CLI
+- Microsoft ODBC Driver 18 for SQL Server
+
+Suggested install flow:
+
+```powershell
+winget install Python.Python.3.12
+winget install GitHub.cli
+py -m pip install --user pipx
+py -m pipx ensurepath
+pipx install "dbt-core==1.9.8"
+pipx inject dbt-core "dbt-postgres==1.9.1" "dbt-fabric==1.9.8"
+winget install Microsoft.AzureCLI
+```
+
+Install the SQL Server ODBC driver from Microsoft:
+
+- ODBC Driver 18 for SQL Server:
+  [Download for Windows](https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server)
+
+Verify:
+
+```powershell
+dbt --version
+az version
+```
+
+Expected adapters:
+
+- `postgres`
+- `fabric`
+
+Notes for Windows:
+
+- the app’s generated config/profile paths are currently written with macOS paths in mind in the README examples; on Windows they will live under the user profile path used by Node on that machine
+- if `dbt` is not found after `pipx install`, open a new terminal so the updated `PATH` is picked up
+- if Fabric still fails after the driver install, confirm `ODBC Driver 18 for SQL Server` is present in the Windows ODBC Data Source Administrator
+
 ## Running the app locally
 
 Install app dependencies:
@@ -118,7 +173,7 @@ Current behavior:
 
 If you use Fabric with Azure CLI authentication:
 
-1. Run this in your normal macOS terminal:
+1. Run this in your normal terminal:
 
 ```bash
 az login

@@ -3,7 +3,7 @@ import {
   importProjectArchive,
   importWorkspaceDirectory,
 } from '../lib/importProject';
-import { pickWorkspaceHandle } from '../lib/workspaceHandles';
+import { pickWorkspaceHandle, restoreWorkspaceHandle } from '../lib/workspaceHandles';
 
 const initialState = {
   tree: null,
@@ -46,6 +46,26 @@ export const importProjectPreview = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : 'Unable to read this ZIP file.',
+      );
+    }
+  },
+);
+
+export const restoreSavedWorkspace = createAsyncThunk(
+  'project/restoreSavedWorkspace',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const handle = await restoreWorkspaceHandle();
+
+      if (!handle) {
+        return null;
+      }
+
+      const previousFilesByPath = getState().project.filesByPath;
+      return await importWorkspaceDirectory(handle, previousFilesByPath);
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : 'Unable to restore the saved workspace.',
       );
     }
   },
@@ -103,6 +123,28 @@ const projectSlice = createSlice({
       })
       .addCase(loadWorkspaceFolder.fulfilled, applyProjectPayload)
       .addCase(loadWorkspaceFolder.rejected, applyProjectError)
+      .addCase(restoreSavedWorkspace.pending, (state) => {
+        state.status = {
+          state: 'loading',
+          message: 'Restoring saved workspace...',
+        };
+      })
+      .addCase(restoreSavedWorkspace.fulfilled, (state, action) => {
+        if (!action.payload) {
+          state.status = {
+            state: 'idle',
+            message: 'Choose a local workspace folder or use ZIP preview as a fallback.',
+          };
+          return;
+        }
+
+        applyProjectPayload(state, action);
+        state.status = {
+          state: 'ready',
+          message: 'Saved workspace restored.',
+        };
+      })
+      .addCase(restoreSavedWorkspace.rejected, applyProjectError)
       .addCase(importProjectPreview.pending, (state, action) => {
         state.status = {
           state: 'loading',
@@ -166,7 +208,6 @@ function applyProjectError(state, action) {
   };
 }
 
-export const { resetProject, selectPath, togglePath, updateSelectedFileContent } =
-  projectSlice.actions;
+export const { resetProject, selectPath, togglePath, updateSelectedFileContent } = projectSlice.actions;
 
 export default projectSlice.reducer;
