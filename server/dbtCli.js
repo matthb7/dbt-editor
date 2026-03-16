@@ -6,6 +6,8 @@ import path from 'node:path';
 const ALLOWED_SUBCOMMANDS = new Set([
   'build',
   'compile',
+  'debug',
+  'deps',
   'run',
   'seed',
   'snapshot',
@@ -78,7 +80,7 @@ export function validateCommand(commandText) {
   }
 
   if (tokens.length === 1) {
-    throw new Error('Add a dbt subcommand like run, seed, test, build, or compile.');
+    throw new Error('Add a dbt subcommand like debug, run, seed, test, build, compile, or deps.');
   }
 
   if (tokens[1] === '--version' || tokens[1] === '-V') {
@@ -102,14 +104,60 @@ export function validateCommand(commandText) {
   };
 }
 
-export async function runDbtCommand({ commandText, projectPath }) {
+export async function runDbtCommand({ commandText, projectPath, env }) {
   const { executable, args } = validateCommand(commandText);
   const cwd = projectPath?.trim() || process.cwd();
 
+  return runDbtProcess({
+    executable,
+    args,
+    cwd,
+    commandText,
+    env,
+  });
+}
+
+export async function runDbtDebug({
+  projectPath,
+  profileDir,
+  profileName,
+  targetName,
+  env,
+}) {
+  return runDbtProcess({
+    args: [
+      'debug',
+      '--project-dir',
+      projectPath,
+      '--profiles-dir',
+      profileDir,
+      '--profile',
+      profileName,
+      '--target',
+      targetName,
+    ],
+    cwd: projectPath,
+    commandText: 'dbt debug',
+    env,
+  });
+}
+
+export async function runDbtProcess({
+  executable = resolveDbtExecutable(),
+  args,
+  cwd,
+  commandText = `dbt ${args.join(' ')}`.trim(),
+  env = {},
+}) {
+  const workingDirectory = cwd?.trim() || process.cwd();
+
   return new Promise((resolve, reject) => {
     const child = spawn(executable, args, {
-      cwd,
-      env: process.env,
+      cwd: workingDirectory,
+      env: {
+        ...process.env,
+        ...env,
+      },
       shell: false,
     });
 
@@ -137,7 +185,7 @@ export async function runDbtCommand({ commandText, projectPath }) {
     child.on('close', (exitCode) => {
       resolve({
         commandText,
-        cwd,
+        cwd: workingDirectory,
         exitCode: exitCode ?? 1,
         ok: exitCode === 0,
         stdout,
@@ -147,7 +195,7 @@ export async function runDbtCommand({ commandText, projectPath }) {
   });
 }
 
-function resolveDbtExecutable() {
+export function resolveDbtExecutable() {
   const userInstallCandidates = getUserDbtCandidates();
 
   for (const candidate of userInstallCandidates) {
@@ -162,12 +210,15 @@ function resolveDbtExecutable() {
 function getUserDbtCandidates() {
   const home = os.homedir();
   const pythonRoot = path.join(home, 'Library', 'Python');
+  const candidates = [path.join(home, '.local', 'bin', 'dbt')];
 
   if (!existsSync(pythonRoot)) {
-    return [];
+    return candidates;
   }
 
-  return readdirSync(pythonRoot)
+  const pythonCandidates = readdirSync(pythonRoot)
     .sort((left, right) => right.localeCompare(left, undefined, { numeric: true }))
     .map((version) => path.join(pythonRoot, version, 'bin', 'dbt'));
+
+  return [...candidates, ...pythonCandidates];
 }

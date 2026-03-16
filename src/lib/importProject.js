@@ -66,6 +66,7 @@ function normalizeImportedProject({
   readyMessage,
 }) {
   const detectedProjectRoot = findDbtProjectRoot(files);
+  const detectedProfileName = findDbtProfileName(files, detectedProjectRoot);
 
   if (files.length === 0) {
     revokeBlobUrls(previousFilesByPath);
@@ -79,6 +80,7 @@ function normalizeImportedProject({
       projectSource: null,
       sourceLabel: '',
       detectedProjectRoot: null,
+      detectedProfileName: '',
       statusMessage: emptyMessage,
       statusState: 'error',
     };
@@ -102,6 +104,7 @@ function normalizeImportedProject({
     projectSource: sourceType,
     sourceLabel,
     detectedProjectRoot,
+    detectedProfileName,
     statusMessage: readyMessage,
     statusState: 'ready',
   };
@@ -120,4 +123,17 @@ function findDbtProjectRoot(files) {
   const segments = match.path.split('/');
   segments.pop();
   return segments.join('/');
+}
+
+function findDbtProfileName(files, detectedProjectRoot) {
+  const rootPrefix = detectedProjectRoot ? `${detectedProjectRoot}/` : '';
+  const targetPath = `${rootPrefix}dbt_project.yml`;
+  const projectFile = files.find((entry) => entry.path === targetPath);
+
+  if (!projectFile?.content) {
+    return '';
+  }
+
+  const match = projectFile.content.match(/^\s*profile:\s*["']?([^"'\n]+)["']?/m);
+  return match ? match[1].trim() : '';
 }

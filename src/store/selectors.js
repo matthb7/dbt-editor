@@ -12,3 +12,6 @@ export const selectDirtyCount = (state) =>
 
 export const selectDetectedProjectRoot = (state) =>
   state.project.detectedProjectRoot;
+
+export const selectDetectedProfileName = (state) =>
+  state.project.detectedProfileName;
