@@ -9,7 +9,7 @@ export default function TreeNode({
   selectedPath,
 }) {
   const isFolder = node.type === 'folder';
-  const isExpanded = expandedPaths.has(node.path);
+  const isExpanded = expandedPaths.includes(node.path);
   const paddingLeft = 16 + depth * 18;
 
   return (
