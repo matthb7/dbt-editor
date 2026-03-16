@@ -93,42 +93,49 @@ export function countDirtyFiles(filesByPath) {
   ).length;
 }
 
+export async function hydrateFileEntry({ path, size = 0, readText, readBlob }) {
+  const fileType = getFileType(path);
+
+  if (fileType === 'text') {
+    const content = await readText();
+    return {
+      path,
+      size: size || new Blob([content]).size,
+      fileType,
+      content,
+      originalContent: content,
+    };
+  }
+
+  if (fileType === 'image') {
+    const blob = await readBlob();
+    return {
+      path,
+      size: size || blob.size,
+      fileType,
+      blobUrl: URL.createObjectURL(blob),
+    };
+  }
+
+  return {
+    path,
+    size,
+    fileType,
+  };
+}
+
 export async function collectFiles(zip) {
   const entries = Object.values(zip.files).filter((entry) => !entry.dir);
 
   return Promise.all(
-    entries.map(async (entry) => {
-      const path = entry.name;
-      const fileType = getFileType(path);
-      const size = entry._data?.uncompressedSize ?? 0;
-
-      if (fileType === 'text') {
-        const content = await entry.async('string');
-        return {
-          path,
-          size: size || new Blob([content]).size,
-          fileType,
-          content,
-          originalContent: content,
-        };
-      }
-
-      if (fileType === 'image') {
-        const blob = await entry.async('blob');
-        return {
-          path,
-          size: size || blob.size,
-          fileType,
-          blobUrl: URL.createObjectURL(blob),
-        };
-      }
-
-      return {
-        path,
-        size,
-        fileType,
-      };
-    }),
+    entries.map((entry) =>
+      hydrateFileEntry({
+        path: entry.name,
+        size: entry._data?.uncompressedSize ?? 0,
+        readText: () => entry.async('string'),
+        readBlob: () => entry.async('blob'),
+      }),
+    ),
   );
 }
 
