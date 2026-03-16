@@ -1,5 +1,7 @@
-import { useId } from 'react';
+import { useEffect, useId } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import AdapterSetupPanel from './components/AdapterSetupPanel';
+import AdapterStatusBar from './components/AdapterStatusBar';
 import WorkspacePanels from './components/WorkspacePanels';
 import { clearActiveWorkspaceHandle } from './lib/workspaceHandles';
 import {
@@ -8,7 +10,12 @@ import {
   resetProject,
 } from './store/projectSlice';
 import {
+  loadSetupStatus,
+  syncProjectDefaults,
+} from './store/adapterSetupSlice';
+import {
   selectDirtyCount,
+  selectDetectedProfileName,
   selectDetectedProjectRoot,
   selectProjectState,
   selectSelectedFile,
@@ -30,6 +37,20 @@ export default function App() {
   const selectedFile = useSelector(selectSelectedFile);
   const dirtyCount = useSelector(selectDirtyCount);
   const detectedProjectRoot = useSelector(selectDetectedProjectRoot);
+  const detectedProfileName = useSelector(selectDetectedProfileName);
+
+  useEffect(() => {
+    dispatch(loadSetupStatus());
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(
+      syncProjectDefaults({
+        profileName: detectedProfileName,
+        projectName,
+      }),
+    );
+  }, [detectedProfileName, projectName, dispatch]);
 
   const handleChooseWorkspace = async () => {
     await dispatch(loadWorkspaceFolder());
@@ -121,6 +142,8 @@ export default function App() {
           </div>
         </div>
 
+        {tree ? <AdapterStatusBar /> : null}
+
         {tree ? (
           <WorkspacePanels
             tree={tree}
@@ -142,6 +165,8 @@ export default function App() {
           </div>
         )}
       </section>
+
+      <AdapterSetupPanel />
     </main>
   );
 }

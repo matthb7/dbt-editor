@@ -34,6 +34,18 @@ export default function TerminalPanel({ collapsed = false, onToggle }) {
   const { detectedProjectRoot, projectSource } = useSelector(
     (state) => state.project,
   );
+  const { status: setupStatus } = useSelector((state) => state.adapterSetup);
+  const savedConfig = setupStatus?.savedConfig;
+  const adapterType = savedConfig?.adapterType || 'fabric';
+  const adapterReady =
+    adapterType === 'fabric' ? setupStatus?.fabricReady : setupStatus?.postgresReady;
+  const secretsReady = !setupStatus?.secretRequired || setupStatus?.sessionSecretLoaded;
+  const setupReady =
+    setupStatus?.dbtInstalled &&
+    adapterReady &&
+    setupStatus?.profileExists &&
+    savedConfig?.projectPath &&
+    secretsReady;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -112,9 +124,20 @@ export default function TerminalPanel({ collapsed = false, onToggle }) {
         </label>
 
         <p className="terminal-note">
-          Real command runner, limited command surface. `dbt --version`, `run`,
-          `seed`, `test`, `snapshot`, `build`, and `compile` are enabled.
+          Real command runner, limited command surface. `dbt --version`,
+          `deps`, `debug`, `run`, `seed`, `test`, `snapshot`, `build`, and `compile`
+          are enabled.
         </p>
+        <div className={`terminal-setup-banner ${setupReady ? 'ready' : 'warn'}`}>
+          <strong>{setupReady ? 'Adapter ready' : 'Adapter setup incomplete'}</strong>
+          <span>
+            {setupReady
+              ? `${savedConfig.adapterType} profile ${savedConfig.profileName} will be used automatically`
+              : setupStatus?.secretRequired && !setupStatus?.sessionSecretLoaded
+                ? 'Re-open Configure adapter and re-enter the password or client secret for this app session'
+                : 'Open Configure adapter to save a profile and test dbt debug before running commands'}
+          </span>
+        </div>
         {projectSource === 'workspace' && detectedProjectRoot === null ? (
           <p className="terminal-note error-text">
             No `dbt_project.yml` was detected in this workspace yet.
