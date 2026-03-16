@@ -1,22 +1,82 @@
 import JSZip from 'jszip';
-import { collectFiles, revokeBlobUrls } from './files';
+import { collectFiles, hydrateFileEntry, revokeBlobUrls } from './files';
 import { buildTree, findFirstFile } from './tree';
 
 export async function importProjectArchive(file, previousFilesByPath = {}) {
   const zip = await JSZip.loadAsync(file);
   const files = await collectFiles(zip);
 
+  return normalizeImportedProject({
+    files,
+    previousFilesByPath,
+    projectName: file.name.replace(/\.zip$/i, ''),
+    sourceType: 'zip-preview',
+    sourceLabel: 'ZIP preview',
+    emptyMessage: 'The ZIP file does not contain any files.',
+    readyMessage: 'ZIP preview loaded. Explorer and editor are ready.',
+  });
+}
+
+export async function importWorkspaceDirectory(handle, previousFilesByPath = {}) {
+  const files = await collectDirectoryFiles(handle);
+
+  return normalizeImportedProject({
+    files,
+    previousFilesByPath,
+    projectName: handle.name,
+    sourceType: 'workspace',
+    sourceLabel: 'Local workspace',
+    emptyMessage: 'The selected folder does not contain any readable files.',
+    readyMessage: 'Workspace loaded. Explorer and editor are ready.',
+  });
+}
+
+async function collectDirectoryFiles(directoryHandle, parentPath = '') {
+  const files = [];
+
+  for await (const entry of directoryHandle.values()) {
+    const nextPath = parentPath ? `${parentPath}/${entry.name}` : entry.name;
+
+    if (entry.kind === 'directory') {
+      files.push(...(await collectDirectoryFiles(entry, nextPath)));
+      continue;
+    }
+
+    const file = await entry.getFile();
+    files.push(
+      await hydrateFileEntry({
+        path: nextPath,
+        size: file.size,
+        readText: () => file.text(),
+        readBlob: () => Promise.resolve(file),
+      }),
+    );
+  }
+
+  return files;
+}
+
+function normalizeImportedProject({
+  files,
+  previousFilesByPath,
+  projectName,
+  sourceType,
+  sourceLabel,
+  emptyMessage,
+  readyMessage,
+}) {
   if (files.length === 0) {
     revokeBlobUrls(previousFilesByPath);
     return {
-      files: [],
       filesByPath: {},
       tree: null,
       fileCount: 0,
       firstFilePath: '',
       topLevelFolders: [],
       projectName: '',
-      statusMessage: 'The ZIP file does not contain any files.',
+      projectSource: null,
+      sourceLabel: '',
+      statusMessage: emptyMessage,
       statusState: 'error',
     };
   }
@@ -30,14 +90,15 @@ export async function importProjectArchive(file, previousFilesByPath = {}) {
   revokeBlobUrls(previousFilesByPath);
 
   return {
-    files,
     filesByPath,
     tree,
     fileCount: files.length,
     firstFilePath: findFirstFile(tree),
     topLevelFolders,
-    projectName: file.name.replace(/\.zip$/i, ''),
-    statusMessage: 'Project imported. Explorer and editor are ready.',
+    projectName,
+    projectSource: sourceType,
+    sourceLabel,
+    statusMessage: readyMessage,
     statusState: 'ready',
   };
 }

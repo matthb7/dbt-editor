@@ -1,21 +1,42 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { importProjectArchive } from '../lib/importProject';
+import {
+  importProjectArchive,
+  importWorkspaceDirectory,
+} from '../lib/importProject';
+import { pickWorkspaceHandle } from '../lib/workspaceHandles';
 
 const initialState = {
   tree: null,
   projectName: '',
+  projectSource: null,
+  sourceLabel: '',
   filesByPath: {},
   fileCount: 0,
   selectedPath: '',
   expandedPaths: [''],
   status: {
     state: 'idle',
-    message: 'Import a zipped dbt project to populate the explorer.',
+    message: 'Choose a local workspace folder or use ZIP preview as a fallback.',
   },
 };
 
-export const importProject = createAsyncThunk(
-  'project/importProject',
+export const loadWorkspaceFolder = createAsyncThunk(
+  'project/loadWorkspaceFolder',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const handle = await pickWorkspaceHandle();
+      const previousFilesByPath = getState().project.filesByPath;
+      return await importWorkspaceDirectory(handle, previousFilesByPath);
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : 'Unable to read this folder.',
+      );
+    }
+  },
+);
+
+export const importProjectPreview = createAsyncThunk(
+  'project/importProjectPreview',
   async (file, { getState, rejectWithValue }) => {
     try {
       const previousFilesByPath = getState().project.filesByPath;
@@ -52,57 +73,90 @@ const projectSlice = createSlice({
 
       currentFile.content = action.payload;
     },
+    resetProject(state) {
+      state.tree = null;
+      state.projectName = '';
+      state.projectSource = null;
+      state.sourceLabel = '';
+      state.filesByPath = {};
+      state.fileCount = 0;
+      state.selectedPath = '';
+      state.expandedPaths = [''];
+      state.status = {
+        state: 'idle',
+        message:
+          'Choose a local workspace folder or use ZIP preview as a fallback.',
+      };
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(importProject.pending, (state, action) => {
+      .addCase(loadWorkspaceFolder.pending, (state) => {
+        state.status = {
+          state: 'loading',
+          message: 'Opening local workspace folder...',
+        };
+      })
+      .addCase(loadWorkspaceFolder.fulfilled, applyProjectPayload)
+      .addCase(loadWorkspaceFolder.rejected, applyProjectError)
+      .addCase(importProjectPreview.pending, (state, action) => {
         state.status = {
           state: 'loading',
           message: `Loading ${action.meta.arg.name}...`,
         };
       })
-      .addCase(importProject.fulfilled, (state, action) => {
-        const {
-          tree,
-          projectName,
-          filesByPath,
-          fileCount,
-          firstFilePath,
-          topLevelFolders,
-          statusMessage,
-          statusState,
-        } = action.payload;
-
-        state.tree = tree;
-        state.projectName = projectName;
-        state.filesByPath = filesByPath;
-        state.fileCount = fileCount;
-        state.selectedPath = firstFilePath;
-        state.expandedPaths = ['', ...topLevelFolders];
-        state.status = {
-          state: statusState,
-          message: statusMessage,
-        };
-      })
-      .addCase(importProject.rejected, (state, action) => {
-        state.tree = null;
-        state.projectName = '';
-        state.filesByPath = {};
-        state.fileCount = 0;
-        state.selectedPath = '';
-        state.expandedPaths = [''];
-        state.status = {
-          state: 'error',
-          message:
-            typeof action.payload === 'string'
-              ? action.payload
-              : 'Unable to read this ZIP file.',
-        };
-      });
+      .addCase(importProjectPreview.fulfilled, applyProjectPayload)
+      .addCase(importProjectPreview.rejected, applyProjectError);
   },
 });
 
-export const { selectPath, togglePath, updateSelectedFileContent } =
+function applyProjectPayload(state, action) {
+  const {
+    tree,
+    projectName,
+    projectSource,
+    sourceLabel,
+    filesByPath,
+    fileCount,
+    firstFilePath,
+    topLevelFolders,
+    statusMessage,
+    statusState,
+  } = action.payload;
+
+  state.tree = tree;
+  state.projectName = projectName;
+  state.projectSource = projectSource;
+  state.sourceLabel = sourceLabel;
+  state.filesByPath = filesByPath;
+  state.fileCount = fileCount;
+  state.selectedPath = firstFilePath;
+  state.expandedPaths = ['', ...topLevelFolders];
+  state.status = {
+    state: statusState,
+    message: statusMessage,
+  };
+}
+
+function applyProjectError(state, action) {
+  state.tree = null;
+  state.projectName = '';
+  state.projectSource = null;
+  state.sourceLabel = '';
+  state.filesByPath = {};
+  state.fileCount = 0;
+  state.selectedPath = '';
+  state.expandedPaths = [''];
+  state.status = {
+    state: 'error',
+    message:
+      typeof action.payload === 'string'
+        ? action.payload
+        : 'Unable to load this project source.',
+  };
+}
+
+export const { resetProject, selectPath, togglePath, updateSelectedFileContent } =
   projectSlice.actions;
 
 export default projectSlice.reducer;

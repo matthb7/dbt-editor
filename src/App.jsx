@@ -3,8 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import EditorPanel from './components/EditorPanel';
 import TreeNode from './components/TreeNode';
 import { formatSize, getLanguageLabel } from './lib/files';
+import { clearActiveWorkspaceHandle } from './lib/workspaceHandles';
 import {
-  importProject,
+  importProjectPreview,
+  loadWorkspaceFolder,
+  resetProject,
   selectPath,
   togglePath,
   updateSelectedFileContent,
@@ -18,10 +21,22 @@ import {
 export default function App() {
   const inputId = useId();
   const dispatch = useDispatch();
-  const { tree, projectName, fileCount, selectedPath, expandedPaths, status } =
-    useSelector(selectProjectState);
+  const {
+    tree,
+    projectName,
+    projectSource,
+    sourceLabel,
+    fileCount,
+    selectedPath,
+    expandedPaths,
+    status,
+  } = useSelector(selectProjectState);
   const selectedFile = useSelector(selectSelectedFile);
   const dirtyCount = useSelector(selectDirtyCount);
+
+  const handleChooseWorkspace = async () => {
+    await dispatch(loadWorkspaceFolder());
+  };
 
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
@@ -30,7 +45,7 @@ export default function App() {
       return;
     }
 
-    await dispatch(importProject(file));
+    await dispatch(importProjectPreview(file));
     event.target.value = '';
   };
 
@@ -42,27 +57,54 @@ export default function App() {
     <main className="app-shell">
       <section className="hero-panel">
         <p className="eyebrow">Local dbt workspace</p>
-        <h1>Import a dbt project ZIP and inspect or edit it locally.</h1>
+        <h1>Pick a local project folder first. Keep ZIP preview as backup.</h1>
         <p className="hero-copy">
-          This slice adds a basic in-browser editor for common text files while
-          keeping the project entirely local. SQL and YAML are the main targets,
-          but the app also handles JSON, text files, images, and unknown binary
-          entries gracefully.
+          The primary flow is now local filesystem access: choose a real folder
+          on this machine and browse it directly in the app. ZIP import remains
+          available as a quick preview path when you do not want to wire up a
+          real workspace yet.
         </p>
 
-        <div className="import-panel">
-          <label className="import-button" htmlFor={inputId}>
-            Choose ZIP
-          </label>
-          <input
-            id={inputId}
-            className="file-input"
-            type="file"
-            accept=".zip,application/zip"
-            onChange={handleFileChange}
-          />
-          <p className={`status-message ${status.state}`}>{status.message}</p>
-        </div>
+        {tree ? (
+          <div className="import-panel compact">
+            <div className="loaded-source-card">
+              <span className="badge">{sourceLabel || 'Loaded project'}</span>
+              <p>{projectSource === 'workspace' ? 'Local folder connected.' : 'Browser-only ZIP preview loaded.'}</p>
+            </div>
+            <button
+              type="button"
+              className="ghost-button reset-button"
+              onClick={() => {
+                clearActiveWorkspaceHandle();
+                dispatch(resetProject());
+              }}
+            >
+              Reset source
+            </button>
+            <p className={`status-message ${status.state}`}>{status.message}</p>
+          </div>
+        ) : (
+          <div className="import-panel">
+            <button
+              type="button"
+              className="import-button"
+              onClick={handleChooseWorkspace}
+            >
+              Choose Workspace Folder
+            </button>
+            <label className="secondary-button" htmlFor={inputId}>
+              ZIP Preview Instead
+            </label>
+            <input
+              id={inputId}
+              className="file-input"
+              type="file"
+              accept=".zip,application/zip"
+              onChange={handleFileChange}
+            />
+            <p className={`status-message ${status.state}`}>{status.message}</p>
+          </div>
+        )}
       </section>
 
       <section className="workspace-panel">
@@ -82,7 +124,7 @@ export default function App() {
             <aside className="explorer-panel">
               <div className="panel-header">
                 <p className="section-label">Explorer</p>
-                <span>Imported tree</span>
+                <span>{sourceLabel || 'Project tree'}</span>
               </div>
               <div className="tree-panel">
                 <ul className="tree-list">
@@ -128,10 +170,11 @@ export default function App() {
           </div>
         ) : (
           <div className="empty-panel">
-            <p>Nothing imported yet.</p>
+            <p>No project source selected.</p>
             <span>
-              Upload a zipped dbt repository to browse folders like `models`,
-              `macros`, `seeds`, and `snapshots`, then open files in the editor.
+              Choose a local workspace folder to work against real files on this
+              machine, or use ZIP preview for a quick read-only style intake
+              flow.
             </span>
           </div>
         )}
