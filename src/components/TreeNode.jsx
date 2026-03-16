@@ -1,5 +1,22 @@
 import { formatSize } from '../lib/files';
 
+function getFileGlyph(node) {
+  if (node.type === 'folder') {
+    return 'DIR';
+  }
+
+  if (node.fileType === 'image') {
+    return 'IMG';
+  }
+
+  if (node.fileType === 'binary') {
+    return 'BIN';
+  }
+
+  const extension = node.name.split('.').pop()?.toUpperCase() || 'TXT';
+  return extension.slice(0, 3);
+}
+
 export default function TreeNode({
   node,
   depth,
@@ -16,7 +33,7 @@ export default function TreeNode({
     <li className="tree-node">
       <button
         type="button"
-        className={`tree-row ${isFolder ? 'folder' : 'file'} ${
+        className={`tree-row ${isFolder ? 'folder' : `file ${node.fileType}`} ${
           selectedPath === node.path ? 'selected' : ''
         }`}
         style={{ paddingLeft }}
@@ -31,6 +48,9 @@ export default function TreeNode({
       >
         <span className="tree-icon" aria-hidden="true">
           {isFolder ? (isExpanded ? '▾' : '▸') : node.fileType === 'image' ? '◈' : '•'}
+        </span>
+        <span className="tree-glyph" aria-hidden="true">
+          {getFileGlyph(node)}
         </span>
         <span className="tree-label">{node.name}</span>
         {node.type === 'file' ? (

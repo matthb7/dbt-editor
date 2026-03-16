@@ -1,3 +1,6 @@
+import Editor from 'react-simple-code-editor';
+import { highlightContent } from '../lib/highlight';
+
 export default function EditorPanel({ file, onContentChange }) {
   if (!file) {
     return (
@@ -26,11 +29,17 @@ export default function EditorPanel({ file, onContentChange }) {
   }
 
   return (
-    <textarea
-      className="editor-textarea"
-      spellCheck="false"
+    <Editor
+      className="editor-textarea code-editor"
+      textareaClassName="editor-input"
+      preClassName="editor-highlight"
       value={file.content}
-      onChange={(event) => onContentChange(event.target.value)}
+      onValueChange={onContentChange}
+      highlight={(code) => highlightContent(code, file.path)}
+      padding={0}
+      spellCheck={false}
+      insertSpaces
+      tabSize={2}
     />
   );
 }

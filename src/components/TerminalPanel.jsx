@@ -27,7 +27,7 @@ function TerminalEntry({ entry }) {
   );
 }
 
-export default function TerminalPanel() {
+export default function TerminalPanel({ collapsed = false, onToggle }) {
   const dispatch = useDispatch();
   const { draftCommand, isRunning, entries } =
     useSelector((state) => state.terminal);
@@ -42,24 +42,38 @@ export default function TerminalPanel() {
 
   return (
     <section className="terminal-panel">
-      <div className="panel-header terminal-header">
+      <div className={`panel-header terminal-header ${collapsed ? 'collapsed' : ''}`}>
         <div>
           <p className="section-label">dbt Terminal</p>
-          <h3>Run local dbt commands</h3>
+          <h3>{collapsed ? 'Terminal' : 'Run local dbt commands'}</h3>
         </div>
-        <div className="editor-badges">
-          <span className="badge">{isRunning ? 'Running' : 'Idle'}</span>
+        <div className="panel-actions">
+          {!collapsed ? (
+            <>
+              <span className="badge">{isRunning ? 'Running' : 'Idle'}</span>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={() => dispatch(clearTerminalEntries())}
+                disabled={entries.length === 0}
+              >
+                Clear log
+              </button>
+            </>
+          ) : null}
           <button
             type="button"
-            className="ghost-button"
-            onClick={() => dispatch(clearTerminalEntries())}
-            disabled={entries.length === 0}
+            className="panel-toggle"
+            onClick={onToggle}
+            aria-label={collapsed ? 'Expand terminal' : 'Collapse terminal'}
           >
-            Clear log
+            {collapsed ? '+' : '−'}
           </button>
         </div>
       </div>
 
+      {collapsed ? null : (
+        <>
       <form className="terminal-form" onSubmit={handleSubmit}>
         <div className="field-group">
           <span>Detected dbt root</span>
@@ -118,6 +132,8 @@ export default function TerminalPanel() {
           </div>
         )}
       </div>
+        </>
+      )}
     </section>
   );
 }
