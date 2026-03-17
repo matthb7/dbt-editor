@@ -15,18 +15,19 @@ export const POSTGRES_SECRET_ENV_VAR = 'DBT_POSTGRES_PASSWORD';
 
 export async function getSavedAdapterConfig() {
   const store = await getConfigStore();
-  return getActiveConfigFromStore(store);
+  return hydrateConfigForUse(getActiveConfigFromStore(store));
 }
 
 export async function getSavedAdapterConfigs() {
   const store = await getConfigStore();
-  return Object.values(store.configs);
+  return Object.values(store.configs).map((config) => hydrateConfigForUse(config));
 }
 
 export async function saveAdapterConfig(config) {
-  const prepared = await prepareAdapterConfig(config);
   const store = await getConfigStore();
-  const configKey = getConfigKey(prepared);
+  const configKey = getConfigKey(config);
+  const existingConfig = store.configs[configKey] || null;
+  const prepared = await prepareAdapterConfig(config, existingConfig);
   const nextStore = {
     version: 2,
     activeConfigKey: configKey,
@@ -37,7 +38,7 @@ export async function saveAdapterConfig(config) {
   };
 
   await writeFile(CONFIG_PATH, JSON.stringify(nextStore, null, 2), 'utf8');
-  return prepared;
+  return hydrateConfigForUse(prepared);
 }
 
 export async function getConfigStore() {
@@ -76,48 +77,20 @@ export async function getConfigStore() {
   };
 }
 
-function normalizeConfigStore(parsed) {
-  if (parsed?.version === 2 && parsed?.configs) {
-    const entries = Object.entries(parsed.configs).map(([key, value]) => [
-      key,
-      sanitizePersistedConfig(value),
-    ]);
-    const configs = Object.fromEntries(entries);
-    const activeConfigKey =
-      parsed.activeConfigKey && configs[parsed.activeConfigKey]
-        ? parsed.activeConfigKey
-        : Object.keys(configs)[0] || '';
-
-    return {
-      activeConfigKey,
-      configs,
-      needsRewrite: Object.values(parsed.configs).some(hasEmbeddedSecret),
-    };
-  }
-
-  if (!parsed) {
-    return {
-      activeConfigKey: '',
-      configs: {},
-      needsRewrite: false,
-    };
-  }
-
-  const sanitized = sanitizePersistedConfig(parsed);
-  const configKey = getConfigKey(sanitized);
-
-  return {
-    activeConfigKey: configKey,
-    configs: {
-      [configKey]: sanitized,
-    },
-    needsRewrite: true,
-  };
-}
-
-export async function prepareAdapterConfig(config) {
+export async function prepareAdapterConfig(config, existingConfig = null) {
   const normalized = normalizeConfig(config);
-  const persisted = stripSecrets(normalized);
+  const existingTargets = normalizeTargets(existingConfig);
+  const nextTargets = {
+    ...existingTargets,
+    [normalized.targetName]: {
+      schema: normalized.schema,
+    },
+  };
+  const persisted = stripSecrets({
+    ...normalized,
+    activeTargetName: normalized.targetName,
+    targets: nextTargets,
+  });
   const profileDir = getProfileDir(persisted);
   const profilePath = path.join(profileDir, 'profiles.yml');
 
@@ -141,28 +114,38 @@ export function getProfileDir(config) {
 }
 
 export function buildProfilesYml(config) {
-  const outputConfig =
-    config.adapterType === 'fabric'
-      ? buildFabricOutput(config)
-      : buildPostgresOutput(config);
+  const targets = normalizeTargets(config);
+  const activeTargetName = getActiveTargetName(config, targets);
 
   return [
     `${config.profileName}:`,
-    `  target: ${config.targetName}`,
+    `  target: ${activeTargetName}`,
     `  outputs:`,
-    `    ${config.targetName}:`,
-    ...outputConfig.map((line) => `      ${line}`),
+    ...Object.entries(targets).flatMap(([targetName, targetConfig]) => [
+      `    ${targetName}:`,
+      ...buildOutputConfigLines(config, targetConfig).map((line) => `      ${line}`),
+    ]),
     '',
   ].join('\n');
 }
 
 export function normalizeConfig(input) {
+  const derivedTargetName =
+    input.targetName?.trim() ||
+    input.activeTargetName?.trim() ||
+    Object.keys(normalizeTargets(input))[0] ||
+    'dev';
+  const derivedSchema =
+    input.schema?.trim() ||
+    normalizeTargets(input)[derivedTargetName]?.schema ||
+    (input.adapterType === 'postgres' ? 'public' : '');
   const base = {
     adapterType: input.adapterType,
     profileName: input.profileName?.trim() || 'default',
-    targetName: input.targetName?.trim() || 'dev',
+    targetName: derivedTargetName,
     projectPath: input.projectPath?.trim() || '',
     threads: Number(input.threads) > 0 ? Number(input.threads) : 4,
+    schema: derivedSchema,
   };
 
   if (base.adapterType === 'fabric') {
@@ -172,10 +155,11 @@ export function normalizeConfig(input) {
       driver: input.driver?.trim() || 'ODBC Driver 18 for SQL Server',
       server: input.server?.trim() || '',
       database: input.database?.trim() || '',
-      schema: input.schema?.trim() || '',
       tenantId: input.tenantId?.trim() || '',
       clientId: input.clientId?.trim() || '',
       clientSecret: input.clientSecret?.trim() || '',
+      targets: normalizeTargets(input, derivedSchema),
+      activeTargetName: derivedTargetName,
     };
   }
 
@@ -184,19 +168,21 @@ export function normalizeConfig(input) {
     host: input.host?.trim() || '',
     port: input.port?.trim() || '5432',
     database: input.database?.trim() || '',
-    schema: input.schema?.trim() || 'public',
     user: input.user?.trim() || '',
     password: input.password?.trim() || '',
+    targets: normalizeTargets(input, derivedSchema),
+    activeTargetName: derivedTargetName,
   };
 }
 
 export function stripSecrets(config) {
   if (config.adapterType === 'fabric') {
-    const { clientSecret: _clientSecret, ...rest } = config;
+    const { clientSecret: _clientSecret, targetName: _targetName, schema: _schema, ...rest } =
+      config;
     return rest;
   }
 
-  const { password: _password, ...rest } = config;
+  const { password: _password, targetName: _targetName, schema: _schema, ...rest } = config;
   return rest;
 }
 
@@ -212,13 +198,62 @@ export function isSecretRequired(config) {
   return config.adapterType === 'postgres';
 }
 
-function buildFabricOutput(config) {
+function normalizeConfigStore(parsed) {
+  if (parsed?.version === 2 && parsed?.configs) {
+    const entries = Object.entries(parsed.configs).map(([key, value]) => [
+      key,
+      sanitizePersistedConfig(value),
+    ]);
+    const configs = Object.fromEntries(entries);
+    const activeConfigKey =
+      parsed.activeConfigKey && configs[parsed.activeConfigKey]
+        ? parsed.activeConfigKey
+        : Object.keys(configs)[0] || '';
+
+    return {
+      activeConfigKey,
+      configs,
+      needsRewrite: Object.values(parsed.configs).some(
+        (config) => hasEmbeddedSecret(config) || !config.targets,
+      ),
+    };
+  }
+
+  if (!parsed) {
+    return {
+      activeConfigKey: '',
+      configs: {},
+      needsRewrite: false,
+    };
+  }
+
+  const sanitized = sanitizePersistedConfig(parsed);
+  const configKey = getConfigKey(sanitized);
+
+  return {
+    activeConfigKey: configKey,
+    configs: {
+      [configKey]: sanitized,
+    },
+    needsRewrite: true,
+  };
+}
+
+function buildOutputConfigLines(config, targetConfig) {
+  if (config.adapterType === 'fabric') {
+    return buildFabricOutput(config, targetConfig);
+  }
+
+  return buildPostgresOutput(config, targetConfig);
+}
+
+function buildFabricOutput(config, targetConfig) {
   const lines = [
     `type: fabric`,
     `driver: "${config.driver}"`,
     `host: "${config.server}"`,
     `database: "${config.database}"`,
-    `schema: "${config.schema}"`,
+    `schema: "${targetConfig.schema}"`,
     `threads: ${config.threads}`,
   ];
 
@@ -234,7 +269,7 @@ function buildFabricOutput(config) {
   return lines;
 }
 
-function buildPostgresOutput(config) {
+function buildPostgresOutput(config, targetConfig) {
   return [
     `type: postgres`,
     `host: "${config.host}"`,
@@ -242,9 +277,65 @@ function buildPostgresOutput(config) {
     `user: "${config.user}"`,
     `password: "{{ env_var('${POSTGRES_SECRET_ENV_VAR}') }}"`,
     `dbname: "${config.database}"`,
-    `schema: "${config.schema}"`,
+    `schema: "${targetConfig.schema}"`,
     `threads: ${config.threads}`,
   ];
+}
+
+function getActiveTargetName(config, targets) {
+  if (config?.activeTargetName && targets[config.activeTargetName]) {
+    return config.activeTargetName;
+  }
+
+  return Object.keys(targets)[0] || 'dev';
+}
+
+function normalizeTargets(config, fallbackSchema = '') {
+  if (config?.targets && Object.keys(config.targets).length > 0) {
+    return Object.fromEntries(
+      Object.entries(config.targets).map(([targetName, targetConfig]) => [
+        targetName,
+        {
+          schema:
+            targetConfig?.schema?.trim?.() ||
+            targetConfig?.schema ||
+            fallbackSchema ||
+            (config.adapterType === 'postgres' ? 'public' : ''),
+        },
+      ]),
+    );
+  }
+
+  const targetName = config?.targetName?.trim?.() || config?.activeTargetName || 'dev';
+  const schema =
+    config?.schema?.trim?.() ||
+    config?.schema ||
+    fallbackSchema ||
+    (config?.adapterType === 'postgres' ? 'public' : '');
+
+  return {
+    [targetName]: {
+      schema,
+    },
+  };
+}
+
+function hydrateConfigForUse(config) {
+  if (!config) {
+    return null;
+  }
+
+  const targets = normalizeTargets(config);
+  const activeTargetName = getActiveTargetName(config, targets);
+  const activeTarget = targets[activeTargetName] || { schema: '' };
+
+  return {
+    ...config,
+    targetName: activeTargetName,
+    schema: activeTarget.schema,
+    targets,
+    activeTargetName,
+  };
 }
 
 function sanitizePathSegment(value) {
@@ -264,7 +355,8 @@ function getActiveConfigFromStore(store) {
 }
 
 function sanitizePersistedConfig(config) {
-  const sanitizedBase = stripSecrets(normalizeConfig(config));
+  const normalized = normalizeConfig(config);
+  const sanitizedBase = stripSecrets(normalized);
   const profileDir = config.profileDir || getProfileDir(sanitizedBase);
   const profilePath = config.profilePath || path.join(profileDir, 'profiles.yml');
   const sanitized = {

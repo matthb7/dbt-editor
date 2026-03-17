@@ -31,7 +31,7 @@ export default function AdapterStatusBar() {
           {isLoadingStatus
             ? 'Checking local dbt environment...'
             : savedConfig
-              ? `${savedConfig.adapterType} / profile ${savedConfig.profileName}`
+              ? `${savedConfig.adapterType} / profile ${savedConfig.profileName} / target ${savedConfig.targetName}`
               : 'No adapter configuration saved yet'}
         </span>
       </div>

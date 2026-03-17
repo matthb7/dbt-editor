@@ -5,6 +5,7 @@ import path from 'node:path';
 
 const ALLOWED_SUBCOMMANDS = new Set([
   'build',
+  'clean',
   'compile',
   'debug',
   'deps',
@@ -80,7 +81,9 @@ export function validateCommand(commandText) {
   }
 
   if (tokens.length === 1) {
-    throw new Error('Add a dbt subcommand like debug, run, seed, test, build, compile, or deps.');
+    throw new Error(
+      'Add a dbt subcommand like debug, run, seed, test, build, clean, compile, or deps.',
+    );
   }
 
   if (tokens[1] === '--version' || tokens[1] === '-V') {

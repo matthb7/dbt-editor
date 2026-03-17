@@ -125,14 +125,14 @@ export default function TerminalPanel({ collapsed = false, onToggle }) {
 
         <p className="terminal-note">
           Real command runner, limited command surface. `dbt --version`,
-          `deps`, `debug`, `run`, `seed`, `test`, `snapshot`, `build`, and `compile`
-          are enabled.
+          `deps`, `debug`, `run`, `seed`, `test`, `snapshot`, `build`,
+          `clean`, and `compile` are enabled.
         </p>
         <div className={`terminal-setup-banner ${setupReady ? 'ready' : 'warn'}`}>
           <strong>{setupReady ? 'Adapter ready' : 'Adapter setup incomplete'}</strong>
           <span>
             {setupReady
-              ? `${savedConfig.adapterType} profile ${savedConfig.profileName} will be used automatically`
+              ? `${savedConfig.adapterType} profile ${savedConfig.profileName} target ${savedConfig.targetName} will be used automatically`
               : setupStatus?.secretRequired && !setupStatus?.sessionSecretLoaded
                 ? 'Re-open Configure adapter and re-enter the password or client secret for this app session'
                 : 'Open Configure adapter to save a profile and test dbt debug before running commands'}

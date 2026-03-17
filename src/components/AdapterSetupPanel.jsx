@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   closeSetupPanel,
   loadSavedSetupConfig,
+  loadSavedSetupTarget,
   loadSetupStatus,
   saveAdapterSetup,
   testAdapterSetup,
@@ -53,14 +54,18 @@ export default function AdapterSetupPanel() {
       ? Boolean(form.password)
       : Boolean(form.clientSecret) || Boolean(status?.sessionSecretLoaded));
   const savedConfigs = status?.savedConfigs || [];
-  const selectedConfigValue =
+  const selectedProfileConfig =
     savedConfigs.find(
       (config) =>
         config.adapterType === form.adapterType &&
         config.profileName === form.profileName,
-    )
-      ? `${form.adapterType}::${form.profileName}`
-      : '';
+    ) || null;
+  const savedTargets = Object.keys(selectedProfileConfig?.targets || {});
+  const selectedConfigValue =
+    selectedProfileConfig ? `${form.adapterType}::${form.profileName}` : '';
+  const selectedTargetValue = savedTargets.includes(form.targetName)
+    ? form.targetName
+    : '';
 
   return (
     <div className="setup-overlay" onClick={() => dispatch(closeSetupPanel())}>
@@ -118,6 +123,26 @@ export default function AdapterSetupPanel() {
                     value={getConfigOptionValue(config)}
                   >
                     {getConfigOptionLabel(config)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          {selectedProfileConfig && savedTargets.length > 0 ? (
+            <label className="field-group setup-span-2">
+              <span>Saved target</span>
+              <select
+                className="terminal-input"
+                value={selectedTargetValue}
+                onChange={(event) =>
+                  dispatch(loadSavedSetupTarget(event.target.value))
+                }
+              >
+                <option value="">New target</option>
+                {savedTargets.map((targetName) => (
+                  <option key={targetName} value={targetName}>
+                    {targetName}
                   </option>
                 ))}
               </select>
