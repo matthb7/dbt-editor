@@ -68,9 +68,14 @@ function getConfigSelectionValue(config) {
 function buildFreshForm(previousForm) {
   return {
     ...initialFormState,
+    adapterType: previousForm.adapterType || initialFormState.adapterType,
     profileName: previousForm.profileName || '',
     projectPath: previousForm.projectPath || '',
   };
+}
+
+function getSavedTargetNames(config) {
+  return Object.keys(config?.targets || {});
 }
 
 export const loadSetupStatus = createAsyncThunk(
@@ -146,11 +151,55 @@ const adapterSetupSlice = createSlice({
         state.form = mergeFormWithSavedConfig(state.form, matchingConfig);
       }
     },
+    loadSavedSetupTarget(state, action) {
+      const targetName = action.payload;
+      const matchingConfig = findMatchingConfig(
+        state.status?.savedConfigs,
+        state.form.adapterType,
+        state.form.profileName,
+      );
+
+      state.saveMessage = '';
+      state.saveStatus = 'idle';
+
+      if (!matchingConfig) {
+        return;
+      }
+
+      if (!targetName) {
+        state.form.targetName = '';
+        state.form.schema = '';
+        return;
+      }
+
+      const target = matchingConfig.targets?.[targetName];
+
+      if (!target) {
+        return;
+      }
+
+      state.form.targetName = targetName;
+      state.form.schema = target.schema || '';
+    },
     updateSetupField(state, action) {
       const { field, value } = action.payload;
       state.form[field] = value;
       state.saveMessage = '';
       state.saveStatus = 'idle';
+
+      if (field === 'targetName') {
+        const matchingConfig = findMatchingConfig(
+          state.status?.savedConfigs,
+          state.form.adapterType,
+          state.form.profileName,
+        );
+
+        if (matchingConfig?.targets?.[value]) {
+          state.form.schema = matchingConfig.targets[value].schema || '';
+        }
+
+        return;
+      }
 
       if (field !== 'adapterType' && field !== 'profileName') {
         return;
@@ -281,6 +330,7 @@ const adapterSetupSlice = createSlice({
 export const {
   closeSetupPanel,
   loadSavedSetupConfig,
+  loadSavedSetupTarget,
   toggleSetupPanel,
   updateSetupField,
   syncProjectDefaults,
