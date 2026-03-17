@@ -27,7 +27,7 @@ export async function saveAdapterConfig(config) {
   const store = await getConfigStore();
   const configKey = getConfigKey(config);
   const existingConfig = store.configs[configKey] || null;
-  const prepared = await prepareAdapterConfig(config, existingConfig);
+  const prepared = await createPreparedAdapterConfig(config, existingConfig);
   const nextStore = {
     version: 2,
     activeConfigKey: configKey,
@@ -78,6 +78,11 @@ export async function getConfigStore() {
 }
 
 export async function prepareAdapterConfig(config, existingConfig = null) {
+  const prepared = await createPreparedAdapterConfig(config, existingConfig);
+  return hydrateConfigForUse(prepared);
+}
+
+async function createPreparedAdapterConfig(config, existingConfig = null) {
   const normalized = normalizeConfig(config);
   const existingTargets = normalizeTargets(existingConfig);
   const nextTargets = {
