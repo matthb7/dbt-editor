@@ -236,6 +236,9 @@ export default function EditorPanel({ file, onContentChange }) {
           smoothScrolling: true,
           cursorBlinking: 'smooth',
           bracketPairColorization: { enabled: true },
+          scrollbar: {
+            alwaysConsumeMouseWheel: false,
+          },
           readOnly: isLog,
         }}
       />
