@@ -52,6 +52,27 @@ export async function restoreWorkspaceHandle() {
   return handle;
 }
 
+export async function writeWorkspaceFile(path, content) {
+  const handle = getActiveWorkspaceHandle();
+
+  if (!handle) {
+    throw new Error('No active workspace folder is selected.');
+  }
+
+  const permission =
+    (await handle.queryPermission?.({ mode: 'readwrite' })) ||
+    (await handle.requestPermission?.({ mode: 'readwrite' }));
+
+  if (permission !== 'granted') {
+    throw new Error('Write permission was not granted for this workspace folder.');
+  }
+
+  const fileHandle = await getWorkspaceFileHandle(path);
+  const writable = await fileHandle.createWritable();
+  await writable.write(content);
+  await writable.close();
+}
+
 export async function clearPersistedWorkspaceHandle() {
   clearActiveWorkspaceHandle();
 
@@ -113,4 +134,20 @@ function openWorkspaceDb() {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
+}
+
+async function getWorkspaceFileHandle(filePath) {
+  const segments = filePath.split('/').filter(Boolean);
+
+  if (segments.length === 0) {
+    throw new Error('A file path is required.');
+  }
+
+  let currentHandle = getActiveWorkspaceHandle();
+
+  for (const segment of segments.slice(0, -1)) {
+    currentHandle = await currentHandle.getDirectoryHandle(segment);
+  }
+
+  return currentHandle.getFileHandle(segments[segments.length - 1]);
 }

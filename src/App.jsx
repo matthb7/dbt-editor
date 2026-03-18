@@ -9,8 +9,10 @@ import {
 import {
   importProjectPreview,
   loadWorkspaceFolder,
+  reloadWorkspaceFromDisk,
   resetProject,
   restoreSavedWorkspace,
+  saveSelectedFileToDisk,
 } from './store/projectSlice';
 import {
   loadSetupStatus,
@@ -18,8 +20,10 @@ import {
 } from './store/adapterSetupSlice';
 import {
   selectDirtyCount,
+  selectDirtyPaths,
   selectDetectedProfileName,
   selectDetectedProjectRoot,
+  selectOpenFiles,
   selectProjectState,
   selectSelectedFile,
 } from './store/selectors';
@@ -38,7 +42,9 @@ export default function App() {
     status,
   } = useSelector(selectProjectState);
   const selectedFile = useSelector(selectSelectedFile);
+  const openFiles = useSelector(selectOpenFiles);
   const dirtyCount = useSelector(selectDirtyCount);
+  const dirtyPaths = useSelector(selectDirtyPaths);
   const detectedProjectRoot = useSelector(selectDetectedProjectRoot);
   const detectedProfileName = useSelector(selectDetectedProfileName);
 
@@ -73,6 +79,13 @@ export default function App() {
     await dispatch(importProjectPreview(file));
     event.target.value = '';
   };
+
+  const canSaveSelectedFile =
+    projectSource === 'workspace' &&
+    selectedFile?.fileType === 'text' &&
+    selectedFile.content !== selectedFile.originalContent;
+  const canReloadWorkspace = projectSource === 'workspace';
+  const isProjectBusy = status.state === 'loading';
 
   return (
     <main className={`app-shell ${tree ? 'project-loaded' : ''}`}>
@@ -143,9 +156,31 @@ export default function App() {
             <p className="section-label">Workspace</p>
             <h2>{projectName || 'No project loaded'}</h2>
           </div>
-          <div className="project-stats">
-            <span>{fileCount} files</span>
-            <span>{dirtyCount} edited</span>
+          <div className="workspace-header-actions">
+            <div className="project-stats">
+              <span>{fileCount} files</span>
+              <span>{dirtyCount} edited</span>
+            </div>
+            {tree ? (
+              <div className="workspace-tools">
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() => dispatch(reloadWorkspaceFromDisk())}
+                  disabled={!canReloadWorkspace || isProjectBusy}
+                >
+                  Reload from disk
+                </button>
+                <button
+                  type="button"
+                  className="import-button"
+                  onClick={() => dispatch(saveSelectedFileToDisk())}
+                  disabled={!canSaveSelectedFile || isProjectBusy}
+                >
+                  Save file
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -154,6 +189,8 @@ export default function App() {
         {tree ? (
           <WorkspacePanels
             tree={tree}
+            dirtyPaths={dirtyPaths}
+            openFiles={openFiles}
             projectName={projectName}
             sourceLabel={sourceLabel}
             projectSource={projectSource}

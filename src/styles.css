@@ -442,11 +442,14 @@ textarea {
   display: inline-grid;
   place-items: center;
   border-radius: 8px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  background: rgba(255, 255, 255, 0.9);
-  color: #29415d;
+  background: transparent;
+  color: #4b6078;
+}
+
+.tree-glyph svg {
+  width: 18px;
+  height: 18px;
+  overflow: visible;
 }
 
 .tree-label {
@@ -455,24 +458,26 @@ textarea {
   white-space: nowrap;
 }
 
+.dirty-indicator {
+  margin-left: 4px;
+  color: #d96b1d;
+  font-weight: 700;
+}
+
 .tree-row.folder .tree-glyph {
-  background: linear-gradient(135deg, rgba(244, 162, 97, 0.28), rgba(231, 111, 81, 0.14));
-  color: #ffd9bf;
+  color: #d96b1d;
 }
 
 .tree-row.file.image .tree-glyph {
-  background: linear-gradient(135deg, rgba(86, 204, 242, 0.24), rgba(47, 128, 237, 0.12));
-  color: #bee7ff;
+  color: #2f80ed;
 }
 
 .tree-row.file.text .tree-glyph {
-  background: linear-gradient(135deg, rgba(115, 225, 188, 0.24), rgba(47, 201, 160, 0.12));
-  color: #c7ffec;
+  color: #2f9f87;
 }
 
 .tree-row.file.binary .tree-glyph {
-  background: linear-gradient(135deg, rgba(155, 161, 178, 0.22), rgba(114, 122, 140, 0.12));
-  color: #e3e7ef;
+  color: #6a7c92;
 }
 
 .tree-meta {
@@ -502,7 +507,54 @@ textarea {
   height: 100%;
 }
 
-.editor-textarea,
+.editor-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px 18px 0;
+  border-bottom: 1px solid rgba(74, 104, 145, 0.1);
+}
+
+.editor-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 6px 8px 0;
+}
+
+.editor-tab-button {
+  min-width: 0;
+  border: 1px solid rgba(74, 104, 145, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.84);
+  color: #314760;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.editor-tab.active .editor-tab-button {
+  background: linear-gradient(135deg, rgba(244, 162, 97, 0.18), rgba(79, 132, 255, 0.08));
+  border-color: rgba(216, 107, 29, 0.22);
+}
+
+.editor-tab-label {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-tab-close {
+  border: 0;
+  background: transparent;
+  color: #6a7c92;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.monaco-shell,
 .editor-preview,
 .editor-empty,
 .empty-panel {
@@ -510,94 +562,16 @@ textarea {
   min-height: 0;
 }
 
-.editor-textarea {
+.monaco-shell {
   width: 100%;
-  border: 0;
-  padding: 22px 26px 28px;
-  color: #e6edf8;
   background:
     linear-gradient(180deg, rgba(17, 22, 30, 0.88), rgba(10, 14, 21, 0.94));
-  font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
-  font-size: 0.95rem;
-  line-height: 1.7;
-  caret-color: #f4a261;
-  tab-size: 2;
 }
 
-.editor-textarea:focus,
-.editor-input:focus {
-  outline: none;
-}
-
-.code-editor {
-  overflow: auto;
-}
-
-.editor-input,
-.editor-highlight {
-  margin: 0;
-  min-height: 100%;
-  font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
-  font-size: 0.95rem;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  word-break: normal;
-}
-
-.editor-input {
-  color: transparent;
-  caret-color: #f4a261;
-}
-
-.editor-highlight {
-  pointer-events: none;
-}
-
-.editor-highlight .token.keyword,
-.editor-highlight .token.atrule {
-  color: #ff9a76;
-}
-
-.editor-highlight .token.string,
-.editor-highlight .token.attr-value {
-  color: #b8f7d4;
-}
-
-.editor-highlight .token.number,
-.editor-highlight .token.boolean {
-  color: #ffd27d;
-}
-
-.editor-highlight .token.function,
-.editor-highlight .token.selector {
-  color: #8dd8ff;
-}
-
-.editor-highlight .token.operator,
-.editor-highlight .token.punctuation {
-  color: #94a3b8;
-}
-
-.editor-highlight .token.comment {
-  color: #6f7b91;
-}
-
-.editor-highlight .token.property,
-.editor-highlight .token.tag {
-  color: #73c9ff;
-}
-
-.editor-highlight .token.jinja-comment {
-  color: #7d8797;
-  font-style: italic;
-}
-
-.editor-highlight .token.jinja-expression {
-  color: #f6c177;
-}
-
-.editor-highlight .token.jinja-statement {
-  color: #c4a7e7;
+.monaco-shell .monaco-editor,
+.monaco-shell .monaco-editor-background,
+.monaco-shell .margin {
+  background: transparent !important;
 }
 
 .editor-preview {

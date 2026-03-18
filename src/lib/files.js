@@ -93,11 +93,15 @@ export function countDirtyFiles(filesByPath) {
   ).length;
 }
 
+export function normalizeTextContent(content) {
+  return content.replace(/\r\n/g, '\n');
+}
+
 export async function hydrateFileEntry({ path, size = 0, readText, readBlob }) {
   const fileType = getFileType(path);
 
   if (fileType === 'text') {
-    const content = await readText();
+    const content = normalizeTextContent(await readText());
     return {
       path,
       size: size || new Blob([content]).size,

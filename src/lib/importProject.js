@@ -17,7 +17,12 @@ export async function importProjectArchive(file, previousFilesByPath = {}) {
   });
 }
 
-export async function importWorkspaceDirectory(handle, previousFilesByPath = {}) {
+export async function importWorkspaceDirectory(
+  handle,
+  previousFilesByPath = {},
+  preferredSelectedPath = '',
+  preferredOpenPaths = [],
+) {
   const files = await collectDirectoryFiles(handle);
 
   return normalizeImportedProject({
@@ -28,6 +33,8 @@ export async function importWorkspaceDirectory(handle, previousFilesByPath = {})
     sourceLabel: 'Local workspace',
     emptyMessage: 'The selected folder does not contain any readable files.',
     readyMessage: 'Workspace loaded. Explorer and editor are ready.',
+    preferredSelectedPath,
+    preferredOpenPaths,
   });
 }
 
@@ -64,6 +71,8 @@ function normalizeImportedProject({
   sourceLabel,
   emptyMessage,
   readyMessage,
+  preferredSelectedPath = '',
+  preferredOpenPaths = [],
 }) {
   const detectedProjectRoot = findDbtProjectRoot(files);
   const detectedProfileName = findDbtProfileName(files, detectedProjectRoot);
@@ -94,11 +103,18 @@ function normalizeImportedProject({
 
   revokeBlobUrls(previousFilesByPath);
 
+  const firstFilePath = findFirstFile(tree);
+  const nextOpenPaths = preferredOpenPaths.filter((path) => filesByPath[path]);
+
   return {
     filesByPath,
     tree,
     fileCount: files.length,
-    firstFilePath: findFirstFile(tree),
+    firstFilePath:
+      preferredSelectedPath && filesByPath[preferredSelectedPath]
+        ? preferredSelectedPath
+        : firstFilePath,
+    openPaths: nextOpenPaths.length > 0 ? nextOpenPaths : [firstFilePath],
     topLevelFolders,
     projectName,
     projectSource: sourceType,
