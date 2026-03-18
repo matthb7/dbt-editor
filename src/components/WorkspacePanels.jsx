@@ -4,7 +4,12 @@ import EditorPanel from './EditorPanel';
 import TerminalPanel from './TerminalPanel';
 import TreeNode from './TreeNode';
 import { formatSize, getLanguageLabel } from '../lib/files';
-import { selectPath, togglePath, updateSelectedFileContent } from '../store/projectSlice';
+import {
+  closePath,
+  selectPath,
+  togglePath,
+  updateSelectedFileContent,
+} from '../store/projectSlice';
 
 function PanelHeader({ label, title, meta, collapsed, onToggle }) {
   return (
@@ -30,6 +35,8 @@ function PanelHeader({ label, title, meta, collapsed, onToggle }) {
 
 export default function WorkspacePanels({
   tree,
+  dirtyPaths,
+  openFiles,
   projectName,
   sourceLabel,
   projectSource,
@@ -136,7 +143,7 @@ export default function WorkspacePanels({
       <aside className="explorer-panel pane-card">
         <PanelHeader
           label="Explorer"
-          title={collapsed.explorer ? 'Files' : projectName || 'Project'}
+          title="Files"
           meta={collapsed.explorer ? null : sourceLabel || 'Project tree'}
           collapsed={collapsed.explorer}
           onToggle={() =>
@@ -147,12 +154,9 @@ export default function WorkspacePanels({
           <div className="tree-panel">
             <ul className="tree-list">
               <TreeNode
-                node={{
-                  ...tree,
-                  name: projectName || 'project',
-                  path: '',
-                }}
+                node={tree}
                 depth={0}
+                dirtyPaths={dirtyPaths}
                 expandedPaths={expandedPaths}
                 onToggle={(path) => dispatch(togglePath(path))}
                 onSelect={(path) => dispatch(selectPath(path))}
@@ -202,6 +206,41 @@ export default function WorkspacePanels({
               </button>
             </div>
           </div>
+
+          {!collapsed.editor && openFiles.length > 0 ? (
+            <div className="editor-tabs">
+              {openFiles.map((file) => {
+                const isDirty =
+                  file.fileType === 'text' && file.content !== file.originalContent;
+
+                return (
+                  <div
+                    key={file.path}
+                    className={`editor-tab ${file.path === selectedPath ? 'active' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      className="editor-tab-button"
+                      onClick={() => dispatch(selectPath(file.path))}
+                    >
+                      <span className="editor-tab-label">
+                        {file.path.split('/').pop()}
+                        {isDirty ? <span className="dirty-indicator">*</span> : null}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="editor-tab-close"
+                      onClick={() => dispatch(closePath(file.path))}
+                      aria-label={`Close ${file.path}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
 
           {!collapsed.editor ? (
             <EditorPanel
