@@ -49,7 +49,7 @@ export default function WorkspacePanels({
   const verticalRef = useRef(null);
   const horizontalRef = useRef(null);
   const [explorerWidth, setExplorerWidth] = useState(310);
-  const [terminalHeight, setTerminalHeight] = useState(1020);
+  const [editorHeight, setEditorHeight] = useState(500);
   const [collapsed, setCollapsed] = useState({
     explorer: false,
     editor: false,
@@ -74,12 +74,11 @@ export default function WorkspacePanels({
         return;
       }
       const rect = editorShell.getBoundingClientRect();
-      const distanceFromBottom = rect.bottom - event.clientY;
       const next = Math.min(
-        Math.max(distanceFromBottom, 180),
-        Math.max(180, rect.height - 120),
+        Math.max(event.clientY - rect.top, 140),
+        Math.max(140, rect.height - 180),
       );
-      setTerminalHeight(next);
+      setEditorHeight(next);
     };
 
     const attachDrag = (handle, onMove) => {
@@ -124,7 +123,7 @@ export default function WorkspacePanels({
             : '60px minmax(0, 1fr)'
           : collapsed.terminal
             ? 'minmax(0, 1fr) 60px'
-            : `minmax(120px, calc(100% - ${terminalHeight + 10}px)) 10px ${terminalHeight}px`,
+            : `${editorHeight}px 10px minmax(180px, 1fr)`,
       }
     : {
         gridTemplateRows: collapsed.editor ? '60px' : '1fr',

@@ -276,6 +276,7 @@ export default function AdapterSetupPanel() {
                 <span>Host / SQL endpoint</span>
                 <input
                   className="terminal-input"
+                  placeholder="GUID.ENV-datawarehouse.fabric.microsoft.com"
                   value={form.server}
                   onChange={(event) =>
                     dispatch(
@@ -286,39 +287,50 @@ export default function AdapterSetupPanel() {
                     )
                   }
                 />
+                <small className="field-hint">
+                  Open the warehouse in Fabric, then go to <strong>Settings</strong> and copy the
+                  <strong> SQL endpoint</strong> from the SQL connection string. It should look like
+                  <code> GUID.ENV-datawarehouse.fabric.microsoft.com</code>.
+                </small>
               </label>
 
-              <label className="field-group">
-                <span>Database</span>
-                <input
-                  className="terminal-input"
-                  value={form.database}
-                  onChange={(event) =>
-                    dispatch(
-                      updateSetupField({
-                        field: 'database',
-                        value: event.target.value,
-                      }),
-                    )
-                  }
-                />
-              </label>
+              <div className="setup-inline-grid setup-span-2">
+                <label className="field-group">
+                  <span>Database</span>
+                  <input
+                    className="terminal-input"
+                    placeholder="Warehouse name"
+                    value={form.database}
+                    onChange={(event) =>
+                      dispatch(
+                        updateSetupField({
+                          field: 'database',
+                          value: event.target.value,
+                        }),
+                      )
+                    }
+                  />
+                  <small className="field-hint">
+                    For Fabric Warehouse, this is the warehouse name, not a separate database server name.
+                  </small>
+                </label>
 
-              <label className="field-group">
-                <span>Driver</span>
-                <input
-                  className="terminal-input"
-                  value={form.driver}
-                  onChange={(event) =>
-                    dispatch(
-                      updateSetupField({
-                        field: 'driver',
-                        value: event.target.value,
-                      }),
-                    )
-                  }
-                />
-              </label>
+                <label className="field-group">
+                  <span>Driver</span>
+                  <input
+                    className="terminal-input"
+                    value={form.driver}
+                    onChange={(event) =>
+                      dispatch(
+                        updateSetupField({
+                          field: 'driver',
+                          value: event.target.value,
+                        }),
+                      )
+                    }
+                  />
+                </label>
+              </div>
 
               {form.authentication === 'service-principal' ? (
                 <>
