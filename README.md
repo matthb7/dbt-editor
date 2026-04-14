@@ -148,6 +148,41 @@ This starts:
 
 In development, Vite may move to a different local port if one is already in use.
 
+## Vercel CI/CD
+
+This repo can use Vercel for automatic frontend preview and production deployments.
+
+What is included in this repo:
+
+- `vercel.json` adds SPA rewrites for the Vite frontend
+- the rewrite intentionally excludes `/api/*` so missing local backend routes do not get rewritten to `index.html`
+
+What Vercel can do well here:
+
+- preview the React frontend on pull requests
+- deploy the static frontend on merges to `main`
+
+What still requires the local app server:
+
+- adapter setup status checks
+- writing local files
+- dbt terminal execution
+- real local filesystem access
+
+That means Vercel is best treated as frontend CI/CD for this project, not as a full hosted runtime for the local dbt tooling.
+
+Recommended Vercel setup:
+
+1. Import the GitHub repo into Vercel.
+2. Let Vercel detect the Vite app.
+3. Keep the default build command `vite build`.
+4. Keep the output directory `dist`.
+5. Enable automatic preview deployments for pull requests and production deployments from `main`.
+
+The rewrite pattern uses Vercel's documented same-application rewrite syntax with a negative lookahead to avoid `/api/` paths:
+
+- [Vercel rewrites documentation](https://vercel.com/docs/rewrites)
+
 ## Adapter setup behavior
 
 The app stores adapter metadata in:
