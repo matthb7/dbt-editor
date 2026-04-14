@@ -35,6 +35,7 @@ export default function TerminalPanel({ collapsed = false, onToggle }) {
     (state) => state.project,
   );
   const { status: setupStatus } = useSelector((state) => state.adapterSetup);
+  const backendAvailable = setupStatus?.backendAvailable !== false;
   const savedConfig = setupStatus?.savedConfig;
   const adapterType = savedConfig?.adapterType || 'fabric';
   const adapterReady =
@@ -129,9 +130,17 @@ export default function TerminalPanel({ collapsed = false, onToggle }) {
           `clean`, and `compile` are enabled.
         </p>
         <div className={`terminal-setup-banner ${setupReady ? 'ready' : 'warn'}`}>
-          <strong>{setupReady ? 'Adapter ready' : 'Adapter setup incomplete'}</strong>
+          <strong>
+            {!backendAvailable
+              ? 'Local backend required'
+              : setupReady
+                ? 'Adapter ready'
+                : 'Adapter setup incomplete'}
+          </strong>
           <span>
-            {setupReady
+            {!backendAvailable
+              ? 'This Vercel deployment can preview the UI, but dbt commands only work when you run the local server on your machine.'
+              : setupReady
               ? `${savedConfig.adapterType} profile ${savedConfig.profileName} target ${savedConfig.targetName} will be used automatically`
               : setupStatus?.secretRequired && !setupStatus?.sessionSecretLoaded
                 ? 'Re-open Configure adapter and re-enter the password or client secret for this app session'

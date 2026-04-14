@@ -1,6 +1,45 @@
+function buildBackendUnavailableStatus() {
+  return {
+    backendAvailable: false,
+    dbtInstalled: false,
+    fabricReady: false,
+    postgresReady: false,
+    profileExists: false,
+    azureCliInstalled: false,
+    azureCliLoggedIn: false,
+    secretRequired: false,
+    sessionSecretLoaded: false,
+    savedConfigs: [],
+    savedConfig: null,
+  };
+}
+
+async function parseApiResponse(response, fallbackMessage) {
+  const contentType = response.headers.get('content-type') || '';
+  const isJson = contentType.includes('application/json');
+  const payload = isJson ? await response.json() : null;
+
+  if (!response.ok) {
+    throw new Error(payload?.error || fallbackMessage);
+  }
+
+  if (!payload) {
+    throw new Error(fallbackMessage);
+  }
+
+  return payload;
+}
+
 export async function fetchSetupStatus() {
-  const response = await fetch('/api/setup/status');
-  return response.json();
+  try {
+    const response = await fetch('/api/setup/status');
+    return await parseApiResponse(
+      response,
+      'Local backend unavailable. Vercel preview can load the UI, but dbt and adapter features require the local server.',
+    );
+  } catch {
+    return buildBackendUnavailableStatus();
+  }
 }
 
 export async function saveSetupConfig(config) {
@@ -11,7 +50,10 @@ export async function saveSetupConfig(config) {
     },
     body: JSON.stringify(config),
   });
-  const payload = await response.json();
+  const payload = await parseApiResponse(
+    response,
+    'Local backend unavailable. Start the local server to save adapter setup.',
+  );
 
   if (!response.ok || !payload.ok) {
     throw new Error(payload.error || 'Unable to save adapter setup.');
@@ -28,7 +70,10 @@ export async function testSetupConfig(config) {
     },
     body: JSON.stringify(config),
   });
-  const payload = await response.json();
+  const payload = await parseApiResponse(
+    response,
+    'Local backend unavailable. Start the local server to test dbt setup.',
+  );
 
   if (!response.ok) {
     const error = new Error(payload.error || payload.stderr || 'dbt debug failed.');

@@ -6,6 +6,7 @@ export default function AdapterStatusBar() {
   const { status, isLoadingStatus } = useSelector((state) => state.adapterSetup);
 
   const savedConfig = status?.savedConfig;
+  const backendAvailable = status?.backendAvailable !== false;
   const adapterType = savedConfig?.adapterType || 'fabric';
   const adapterReady =
     adapterType === 'fabric' ? status?.fabricReady : status?.postgresReady;
@@ -26,10 +27,18 @@ export default function AdapterStatusBar() {
     <div className="adapter-status-bar">
       <div className="adapter-status-copy">
         <p className="section-label">Adapter</p>
-        <strong>{overallReady ? 'Ready to run' : 'Setup needed'}</strong>
+        <strong>
+          {!backendAvailable
+            ? 'Local backend required'
+            : overallReady
+              ? 'Ready to run'
+              : 'Setup needed'}
+        </strong>
         <span>
           {isLoadingStatus
             ? 'Checking local dbt environment...'
+            : !backendAvailable
+              ? 'Vercel preview can show the UI, but adapter checks and dbt execution only work with the local server.'
             : savedConfig
               ? `${savedConfig.adapterType} / profile ${savedConfig.profileName} / target ${savedConfig.targetName}`
               : 'No adapter configuration saved yet'}
@@ -53,7 +62,11 @@ export default function AdapterStatusBar() {
         className="ghost-button"
         onClick={() => dispatch(toggleSetupPanel())}
       >
-        {overallReady ? 'Edit adapter' : 'Configure adapter'}
+        {!backendAvailable
+          ? 'View adapter setup'
+          : overallReady
+            ? 'Edit adapter'
+            : 'Configure adapter'}
       </button>
     </div>
   );
